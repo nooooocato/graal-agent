@@ -1,11 +1,24 @@
 package com.graalagent.transformer.plugins;
 
 import com.graalagent.transformer.ClassTransformPlugin;
+import com.graalagent.util.Logger;
+
 import java.lang.classfile.ClassBuilder;
+import java.lang.classfile.ClassElement;
 import java.lang.classfile.ClassModel;
+import java.lang.classfile.ClassTransform;
+import java.lang.classfile.CodeBuilder;
+import java.lang.classfile.CodeElement;
+import java.lang.classfile.CodeTransform;
+import java.lang.classfile.MethodModel;
+import java.lang.classfile.MethodTransform;
+import java.lang.classfile.instruction.ReturnInstruction;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.MethodTypeDesc;
 
 /**
- * 服务端指令总线微插件：拦截 net.minecraft.commands.Commands 的构造函数注入 Brigadier 命令
+ * 服务端命令微插件：在 net.minecraft.commands.Commands 构造完成返回前，
+ * 截获 CommandDispatcher 并注入 /js、/reloadjs 及脚本注册的自定义服务端命令。
  */
 public class CommandsInitPlugin implements ClassTransformPlugin {
 
@@ -18,6 +31,41 @@ public class CommandsInitPlugin implements ClassTransformPlugin {
 
     @Override
     public void transform(ClassModel classModel, ClassBuilder classBuilder) {
-        throw new UnsupportedOperationException("CommandsInitPlugin is not yet implemented (Red Phase stub)");
+        ClassTransform ct = asClassTransform(classModel);
+        for (ClassElement ce : classModel) {
+            ct.accept(classBuilder, ce);
+        }
+    }
+
+    @Override
+    public ClassTransform asClassTransform(ClassModel classModel) {
+        return (builder, element) -> {
+            if (element instanceof MethodModel mm
+                    && mm.methodName().stringValue().equals("<init>")
+                    && mm.methodType().stringValue().equals("(Lnet/minecraft/commands/Commands$CommandSelection;Lnet/minecraft/commands/CommandBuildContext;)V")) {
+                Logger.info("[CommandsInitPlugin] Injecting server Brigadier command dispatcher hook...");
+                builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                    @Override
+                    public void accept(CodeBuilder cb, CodeElement ce) {
+                        if (ce instanceof ReturnInstruction) {
+                            cb.aload(0);
+                            cb.invokevirtual(
+                                    ClassDesc.of("net.minecraft.commands.Commands"),
+                                    "getDispatcher",
+                                    MethodTypeDesc.ofDescriptor("()Lcom/mojang/brigadier/CommandDispatcher;")
+                            );
+                            cb.invokestatic(
+                                    ClassDesc.of("com.graalagent.bridge.AgentBridge"),
+                                    "onRegisterServerCommands",
+                                    MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
+                            );
+                        }
+                        cb.with(ce);
+                    }
+                }));
+                return;
+            }
+            builder.with(element);
+        };
     }
 }
