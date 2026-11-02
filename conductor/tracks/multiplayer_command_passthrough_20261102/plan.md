@@ -1,6 +1,6 @@
 # Implementation Plan: Multiplayer Command Passthrough, Dynamic Suggestion Sync & Security Sandboxing (`multiplayer_command_passthrough`)
 
-## Phase 1: 服务端控制台无参指令与生命周期修复
+## Phase 1: 服务端控制台无参指令与生命周期修复 [checkpoint: a2eca4d]
 - [x] Task: 编写服务端指令无参执行与重载解耦单元测试 (Red Phase) ba37cc4
     - [x] 编写测试用例验证无参调用 `serverinfo`、`fstest` 的语法树解析
     - [x] 编写测试用例验证执行 `/reloadjs` 后再调用自定义指令不报上下文已关闭
@@ -8,7 +8,7 @@
     - [x] 在 `customLiteral` 节点上增加 `executesLiteral.invoke(customLiteral, customCommand)` 支持无参调用
     - [x] 改造 `handleCustomExecution` 为执行时动态获取 `ScriptManager.getInstance().getCustomCommands().get(cmdName)`
     - [x] 修复 `EnvironmentContext.broadcastMessage` 中加载 `Component` 的类加载器
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) a2eca4d
 
 ## Phase 2: 客户端指令穿透与提示动态同步
 - [ ] Task: 编写多人游戏指令穿透与过滤测试 (Red Phase)
