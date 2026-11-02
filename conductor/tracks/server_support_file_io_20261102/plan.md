@@ -11,9 +11,9 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [d237727]
 
 ## Phase 2: Dual-Environment Runtime Detection & Thread Dispatcher
-- [ ] Task: Create Tests for Dual-Environment Context & Dispatching
-    - [ ] Write tests verifying client vs dedicated server environment detection
-    - [ ] Write tests verifying thread dispatch routing
+- [x] Task: Create Tests for Dual-Environment Context & Dispatching [19a1a5a]
+    - [x] Write tests verifying client vs dedicated server environment detection
+    - [x] Write tests verifying thread dispatch routing
 - [ ] Task: Refactor and Implement Environment Bridge
     - [ ] Create `com.mcagent.bridge.EnvironmentContext` supporting Client (`Minecraft`) and Server (`MinecraftServer`)
     - [ ] Implement thread-safe execution dispatching via `MinecraftServer.execute(...)` on server instances
