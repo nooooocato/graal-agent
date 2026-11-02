@@ -138,6 +138,7 @@ public class ScriptManager {
         bindings.putMember("agent", agentAPI);
         bindings.putMember("events", eventBus);
         bindings.putMember("__getMinecraft", (Supplier<Object>) AgentBridge::getMinecraft);
+        bindings.putMember("__getMinecraftServer", (Supplier<Object>) AgentBridge::getServer);
 
         // Define standard browser/Node utilities and dynamic MC globals
         context.eval("js", """
@@ -183,6 +184,11 @@ public class ScriptManager {
                     const m = __getMinecraft();
                     return m ? m.level : null;
                 },
+                configurable: true
+            });
+
+            Object.defineProperty(globalThis, 'server', {
+                get: () => __getMinecraftServer(),
                 configurable: true
             });
 
@@ -254,6 +260,32 @@ public class ScriptManager {
             }
         }
         eventBus.emit("tick");
+    }
+
+    public synchronized void onServerStart(Object server) {
+        if (!gameInitialized) {
+            gameInitialized = true;
+            Logger.info("MinecraftServer ready. Emitting 'serverInit' and 'init' events.");
+            eventBus.emit("serverInit", server);
+            eventBus.emit("init", server);
+        }
+    }
+
+    public synchronized void onServerTick(Object server) {
+        if (AgentBridge.getMinecraft() == null) {
+            if (!gameInitialized) {
+                gameInitialized = true;
+                Logger.info("Dedicated server tick initialized. Emitting 'serverInit' and 'init' events.");
+                eventBus.emit("serverInit", server);
+                eventBus.emit("init", server);
+            }
+            eventBus.emit("tick");
+        }
+        eventBus.emit("serverTick", server);
+    }
+
+    public synchronized void onServerStop() {
+        eventBus.emit("serverStop");
     }
 
     public synchronized boolean onKey(long window, int key, Object event) {

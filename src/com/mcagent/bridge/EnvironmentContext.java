@@ -1,5 +1,9 @@
 package com.mcagent.bridge;
 
+import com.mcagent.util.Logger;
+
+import java.lang.reflect.Method;
+
 public class EnvironmentContext {
     private final Object clientInstance;
     private final Object serverInstance;
@@ -9,19 +13,104 @@ public class EnvironmentContext {
         this.serverInstance = serverInstance;
     }
 
+    public static EnvironmentContext getLiveContext() {
+        return new EnvironmentContext(AgentBridge.getMinecraft(), AgentBridge.getServer());
+    }
+
     public EnvironmentType getEnvironmentType() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (clientInstance != null) {
+            return EnvironmentType.CLIENT;
+        }
+        if (serverInstance != null) {
+            return EnvironmentType.DEDICATED_SERVER;
+        }
+        return EnvironmentType.UNKNOWN;
     }
 
     public boolean isClient() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return getEnvironmentType() == EnvironmentType.CLIENT;
     }
 
     public boolean isDedicatedServer() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return getEnvironmentType() == EnvironmentType.DEDICATED_SERVER;
+    }
+
+    public boolean isServer() {
+        return serverInstance != null;
+    }
+
+    public Object getClient() {
+        return clientInstance;
+    }
+
+    public Object getServer() {
+        return serverInstance;
     }
 
     public void execute(Runnable runnable) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (runnable == null) {
+            return;
+        }
+
+        Object target = (isDedicatedServer() || clientInstance == null) ? serverInstance : clientInstance;
+        if (target != null) {
+            try {
+                Method isSameThread = target.getClass().getMethod("isSameThread");
+                boolean same = (boolean) isSameThread.invoke(target);
+                if (same) {
+                    runnable.run();
+                    return;
+                }
+            } catch (Throwable ignored) {}
+
+            try {
+                Method executeMethod = target.getClass().getMethod("execute", Runnable.class);
+                executeMethod.invoke(target, runnable);
+                return;
+            } catch (Throwable t) {
+                Logger.error("Failed to dispatch execution on target " + target.getClass().getName(), t);
+            }
+        }
+
+        // Fallback: run on caller thread
+        runnable.run();
+    }
+
+    public void broadcastMessage(String message) {
+        if (message == null) {
+            return;
+        }
+
+        if (serverInstance != null) {
+            try {
+                Class<?> compClass = Class.forName("net.minecraft.network.chat.Component");
+                Method literalMethod = compClass.getMethod("literal", String.class);
+                Object comp = literalMethod.invoke(null, message);
+
+                // 1. Send to server console
+                Method sendSystem = serverInstance.getClass().getMethod("sendSystemMessage", compClass);
+                sendSystem.invoke(serverInstance, comp);
+
+                // 2. Broadcast to all connected players if player list is present
+                try {
+                    Method getPlayerList = serverInstance.getClass().getMethod("getPlayerList");
+                    Object playerList = getPlayerList.invoke(serverInstance);
+                    if (playerList != null) {
+                        Method broadcast = playerList.getClass().getMethod("broadcastSystemMessage", compClass, boolean.class);
+                        broadcast.invoke(playerList, comp, false);
+                    }
+                } catch (Throwable ignored) {}
+                return;
+            } catch (Throwable t) {
+                Logger.warn("Failed to broadcast on server, falling back to chat/log: " + t.getMessage());
+            }
+        }
+
+        if (clientInstance != null) {
+            AgentBridge.sendChatMessage(message);
+            return;
+        }
+
+        Logger.info("[Broadcast] " + message);
     }
 }

@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 
 public class AgentBridge {
     private static volatile Object cachedMinecraft = null;
+    private static volatile Object cachedServer = null;
     private static volatile Method literalMethod = null;
     private static volatile Method sendSystemMessageMethod = null;
     private static volatile Field playerField = null;
@@ -24,6 +25,40 @@ public class AgentBridge {
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    public static Object getServer() {
+        return cachedServer;
+    }
+
+    public static void setServer(Object server) {
+        cachedServer = server;
+    }
+
+    public static void onServerStart(Object server) {
+        cachedServer = server;
+        Logger.info("MinecraftServer instance captured: " + server.getClass().getName());
+        ScriptManager sm = ScriptManager.getInstance();
+        if (sm != null) {
+            sm.onServerStart(server);
+        }
+    }
+
+    public static void onServerTick(Object server) {
+        cachedServer = server;
+        ScriptManager sm = ScriptManager.getInstance();
+        if (sm != null) {
+            sm.onServerTick(server);
+        }
+    }
+
+    public static void onServerStop() {
+        Logger.info("MinecraftServer stopping...");
+        ScriptManager sm = ScriptManager.getInstance();
+        if (sm != null) {
+            sm.onServerStop();
+        }
+        cachedServer = null;
     }
 
     public static void onTick() {
@@ -65,6 +100,12 @@ public class AgentBridge {
     }
 
     public static void sendChatMessage(String message) {
+        // Dedicated Server mode: broadcast directly to console and players
+        if (cachedServer != null && cachedMinecraft == null) {
+            EnvironmentContext.getLiveContext().broadcastMessage(message);
+            return;
+        }
+
         Object mc = getMinecraft();
         if (mc != null) {
             Runnable task = () -> {
@@ -105,6 +146,11 @@ public class AgentBridge {
                 task.run();
                 return;
             }
+        }
+
+        if (cachedServer != null) {
+            EnvironmentContext.getLiveContext().broadcastMessage(message);
+            return;
         }
 
         Logger.info("[Chat] " + message);

@@ -39,6 +39,8 @@ public class MinecraftTransformer implements ClassFileTransformer {
                 currentBytes = transformKeyboardHandler(currentBytes);
             } else if (className.equals("net/minecraft/client/multiplayer/ClientPacketListener")) {
                 currentBytes = transformClientPacketListener(currentBytes);
+            } else if (className.equals("net/minecraft/server/MinecraftServer")) {
+                currentBytes = transformMinecraftServer(currentBytes);
             }
 
             // Custom JavaScript transformers (delegated through ScriptManager's lock)
@@ -199,6 +201,68 @@ public class MinecraftTransformer implements ClassFileTransformer {
                                 cb.invokestatic(
                                         ClassDesc.of("com.mcagent.bridge.AgentBridge"),
                                         "onUpdateCommands",
+                                        MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
+                                );
+                            }
+                            cb.with(ce);
+                        }
+                    }));
+                    return;
+                }
+            }
+            builder.with(element);
+        };
+        return classFile.transformClass(cm, ct);
+    }
+
+    private byte[] transformMinecraftServer(byte[] bytes) {
+        Logger.info("Instrumenting net.minecraft.server.MinecraftServer (lifecycle & tick hooks)...");
+        ClassModel cm = classFile.parse(bytes);
+        ClassTransform ct = (builder, element) -> {
+            if (element instanceof MethodModel mm) {
+                String methodName = mm.methodName().stringValue();
+                String methodDesc = mm.methodType().stringValue();
+
+                // 1. runServer hook (server thread entry point and exit)
+                if (methodName.equals("runServer") && methodDesc.equals("()V")) {
+                    builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                        boolean injected = false;
+                        @Override
+                        public void accept(CodeBuilder cb, CodeElement ce) {
+                            if (!injected) {
+                                injected = true;
+                                cb.aload(0);
+                                cb.invokestatic(
+                                        ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+                                        "onServerStart",
+                                        MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
+                                );
+                            }
+                            if (ce instanceof ReturnInstruction) {
+                                cb.invokestatic(
+                                        ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+                                        "onServerStop",
+                                        MethodTypeDesc.ofDescriptor("()V")
+                                );
+                            }
+                            cb.with(ce);
+                        }
+                    }));
+                    return;
+                }
+
+                // 2. tickServer hook
+                if (methodName.equals("tickServer") && methodDesc.equals("(Ljava/util/function/BooleanSupplier;)V")) {
+                    builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                        boolean injected = false;
+                        @Override
+                        public void accept(CodeBuilder cb, CodeElement ce) {
+                            if (!injected) {
+                                injected = true;
+                                cb.aload(0);
+                                cb.invokestatic(
+                                        ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+                                        "onServerTick",
                                         MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
                                 );
                             }

@@ -54,6 +54,26 @@ public class AgentAPI {
         return scriptsDir.getAbsolutePath();
     }
 
+    public boolean isClient() {
+        return com.mcagent.bridge.EnvironmentContext.getLiveContext().isClient();
+    }
+
+    public boolean isDedicatedServer() {
+        return com.mcagent.bridge.EnvironmentContext.getLiveContext().isDedicatedServer();
+    }
+
+    public Object getServer() {
+        return AgentBridge.getServer();
+    }
+
+    public void execute(Value callback) {
+        if (callback != null && callback.canExecute()) {
+            com.mcagent.bridge.EnvironmentContext.getLiveContext().execute(() -> {
+                scriptManager.executeCallback(callback);
+            });
+        }
+    }
+
     public int setTimeout(Value callback, long delayMs) {
         int id = timerIdGen.getAndIncrement();
         ScheduledFuture<?> future = scheduler.schedule(() -> {
