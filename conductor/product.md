@@ -24,8 +24,9 @@
    - Real-time `WatchService` file monitoring and `/reloadjs` command.
    - Hot-reload game logic, listeners, commands, and generated data without restarting the server or client.
 
-6. **Full-Stack Brigadier & UTF-8 Integration:**
-   - Standard `/` command syntax registration (`/js`, `/reloadjs`, and dynamic custom commands).
+6. **Full-Stack Brigadier, Diagnostics & UTF-8 Integration:**
+   - Standard `/` command syntax registration via `BrigadierAdapter` (`/js`, `/reloadjs`, and dynamic custom commands) with instant player sync.
+   - Built-in structured telemetry (`DiagnosticsHub`) and automated crash snapshots (`CrashDumpRecorder`).
    - Standardized UTF-8 encoding across Windows console, log files (`agent.log`), and game text components.
 
 ## Boundaries & Non-Goals
