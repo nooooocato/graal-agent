@@ -14,7 +14,7 @@
 
 3. **Minimalist, High-Performance Mod API:**
    - Adheres to a "least-is-more" philosophy: exposes a compact, zero-overhead core API while granting full Java interoperability (`Java.type`) and raw event hooks.
-   - Relies on Java 25 standard `java.lang.classfile` for clean, zero-dependency bytecode instrumentation.
+   - Relies on Java 25 standard `java.lang.classfile` and [[Shadow-Method-Virtualization|Shadow Method Virtualization (SMV)]] micro-plugin mesh for clean, zero-dependency, non-destructive bytecode instrumentation.
 
 4. **Script-Driven Asset & Data Pack Synthesis (Mod-Grade Capability):**
    - Grants JS scripts managed read/write access to the `scripts/` directory and custom virtual resource packs / data packs.
