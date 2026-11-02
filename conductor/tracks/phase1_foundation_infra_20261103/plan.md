@@ -36,11 +36,11 @@
     - [x] 替换 `ServerCommandDispatcher` 与 `ScriptManager` 中的旧版硬编码反射
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4: 强类型引导配置与依赖加载器 (Bootstrap & Config)
+## Phase 4: 强类型引导配置与依赖加载器 (Bootstrap & Config) [checkpoint: fe085b6]
 - [x] Task: 编写 AgentConfig 与 LibraryInjector 单元测试 (Red Phase) 78fadfa
     - [x] 编写命令行参数解析测试
     - [x] 编写确定性依赖检验测试
 - [x] Task: 实现 AgentConfig 与 LibraryInjector (Green Phase) fe085b6
     - [x] 创建 `com.graalagent.bootstrap.AgentConfig` record
     - [x] 创建 `com.graalagent.bootstrap.LibraryInjector`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
