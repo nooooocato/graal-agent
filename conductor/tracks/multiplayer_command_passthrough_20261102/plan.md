@@ -11,9 +11,9 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) a2eca4d
 
 ## Phase 2: 客户端指令穿透与提示动态同步
-- [ ] Task: 编写多人游戏指令穿透与过滤测试 (Red Phase)
-    - [ ] 编写测试验证在多人模式下 `/serverinfo`、`/js`、`/reloadjs` 返回 false（穿透发包）
-    - [ ] 编写测试验证 `/cjs`、`/clientjs` 在客户端本地拦截并求值
+- [x] Task: 编写多人游戏指令穿透与过滤测试 (Red Phase) 51fd487
+    - [x] 编写测试验证在多人模式下 `/serverinfo`、`/js`、`/reloadjs` 返回 false（穿透发包）
+    - [x] 编写测试验证 `/cjs`、`/clientjs` 在客户端本地拦截并求值
 - [ ] Task: 实现客户端指令穿透与本地专属调试指令 (Green Phase)
     - [ ] 在 `AgentBridge.isMultiplayer()` 中接入 `Minecraft.getInstance().isLocalServer()` 检测
     - [ ] 改造 `ScriptManager.onSendCommand`：若处于多人模式，将指令穿透至服务端；仅拦截处理 `/cjs`
