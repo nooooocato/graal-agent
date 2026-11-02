@@ -31,8 +31,8 @@
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Dynamic Datapack Injection & Hot Reload
-- [ ] Task: Create Tests for Datapack Auto-Discovery
-    - [ ] Write tests for detecting and indexing `scripts/datapacks/`
+- [x] Task: Create Tests for Datapack Auto-Discovery [0371be0]
+    - [x] Write tests for detecting and indexing `scripts/datapacks/`
 - [ ] Task: Implement PackRepository Bytecode Hook & Server Resource Reload
     - [ ] Instrument `PackRepository` to automatically inject scripts datapack sources
     - [ ] Wire `/reloadjs` to invoke `MinecraftServer.reloadResources(...)`
