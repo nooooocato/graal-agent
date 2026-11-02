@@ -14,11 +14,11 @@
 - [x] Task: Create Tests for Dual-Environment Context & Dispatching [19a1a5a]
     - [x] Write tests verifying client vs dedicated server environment detection
     - [x] Write tests verifying thread dispatch routing
-- [ ] Task: Refactor and Implement Environment Bridge
-    - [ ] Create `com.mcagent.bridge.EnvironmentContext` supporting Client (`Minecraft`) and Server (`MinecraftServer`)
-    - [ ] Implement thread-safe execution dispatching via `MinecraftServer.execute(...)` on server instances
-    - [ ] Update `MinecraftTransformer` to instrument `MinecraftServer` initialization and lifecycle
-    - [ ] Run automated tests and verify build with `build.ps1`
+- [x] Task: Refactor and Implement Environment Bridge [dc8bc90]
+    - [x] Create `com.mcagent.bridge.EnvironmentContext` supporting Client (`Minecraft`) and Server (`MinecraftServer`)
+    - [x] Implement thread-safe execution dispatching via `MinecraftServer.execute(...)` on server instances
+    - [x] Update `MinecraftTransformer` to instrument `MinecraftServer` initialization and lifecycle
+    - [x] Run automated tests and verify build with `build.ps1`
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Server Brigadier Command Integration
