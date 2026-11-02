@@ -10,7 +10,7 @@
 
 events.onKey((window, key, event) => {
     // 检查玩家是否已经在世界中且未打开输入界面
-    if (!player || mc.screen !== null) {
+    if (!player || (mc && mc.screen !== null)) {
         return false;
     }
 

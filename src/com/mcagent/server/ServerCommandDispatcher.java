@@ -19,12 +19,17 @@ public class ServerCommandDispatcher {
         }
 
         try {
-            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder");
-            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType");
-            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder");
-            Class<?> commandClass = Class.forName("com.mojang.brigadier.Command");
-            Class<?> argumentTypeClass = Class.forName("com.mojang.brigadier.arguments.ArgumentType");
-            Class<?> argumentBuilderClass = Class.forName("com.mojang.brigadier.builder.ArgumentBuilder");
+            ClassLoader cl = dispatcher.getClass().getClassLoader();
+            if (cl == null) {
+                cl = ClassLoader.getSystemClassLoader();
+            }
+
+            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder", true, cl);
+            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType", true, cl);
+            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder", true, cl);
+            Class<?> commandClass = Class.forName("com.mojang.brigadier.Command", true, cl);
+            Class<?> argumentTypeClass = Class.forName("com.mojang.brigadier.arguments.ArgumentType", true, cl);
+            Class<?> argumentBuilderClass = Class.forName("com.mojang.brigadier.builder.ArgumentBuilder", true, cl);
 
             Method literalMethod = literalBuilderClass.getMethod("literal", String.class);
             Method greedyStringMethod = argumentsClass.getMethod("greedyString");
@@ -45,7 +50,7 @@ public class ServerCommandDispatcher {
             Object codeArg = argumentMethod.invoke(null, "code", greedyArg);
 
             Object jsCommand = Proxy.newProxyInstance(
-                    commandClass.getClassLoader(),
+                    cl,
                     new Class<?>[]{commandClass},
                     (proxy, method, args) -> {
                         if ("run".equals(method.getName()) && args.length == 1) {
@@ -60,7 +65,7 @@ public class ServerCommandDispatcher {
 
             // 2. Build /reloadjs and /jsreload
             Object reloadCommand = Proxy.newProxyInstance(
-                    commandClass.getClassLoader(),
+                    cl,
                     new Class<?>[]{commandClass},
                     (proxy, method, args) -> {
                         if ("run".equals(method.getName()) && args.length == 1) {
@@ -91,7 +96,7 @@ public class ServerCommandDispatcher {
                     Object customArgNode = argumentMethod.invoke(null, "args", customGreedyArg);
 
                     Object customCommand = Proxy.newProxyInstance(
-                            commandClass.getClassLoader(),
+                            cl,
                             new Class<?>[]{commandClass},
                             (proxy, method, args) -> {
                                 if ("run".equals(method.getName()) && args.length == 1) {
@@ -124,12 +129,18 @@ public class ServerCommandDispatcher {
                 return true; // Server console or command block
             }
 
+            ClassLoader cl = source.getClass().getClassLoader();
+            if (cl == null) {
+                cl = ClassLoader.getSystemClassLoader();
+            }
+
             // Check permissions using Minecraft 26.3 Commands.LEVEL_ADMINS (level 2)
-            Class<?> commandsClass = Class.forName("net.minecraft.commands.Commands");
+            Class<?> commandsClass = Class.forName("net.minecraft.commands.Commands", true, cl);
             Field levelAdminsField = commandsClass.getField("LEVEL_ADMINS");
             Object levelAdmins = levelAdminsField.get(null);
 
-            Method checkMethod = levelAdmins.getClass().getMethod("check", Class.forName("net.minecraft.server.permissions.PermissionSet"));
+            Class<?> permSetClass = Class.forName("net.minecraft.server.permissions.PermissionSet", true, cl);
+            Method checkMethod = levelAdmins.getClass().getMethod("check", permSetClass);
             Method permissionsMethod = source.getClass().getMethod("permissions");
             Object perms = permissionsMethod.invoke(source);
 
@@ -207,7 +218,11 @@ public class ServerCommandDispatcher {
         }
 
         try {
-            Class<?> compClass = Class.forName("net.minecraft.network.chat.Component");
+            ClassLoader cl = source.getClass().getClassLoader();
+            if (cl == null) {
+                cl = ClassLoader.getSystemClassLoader();
+            }
+            Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
             Method literalMethod = compClass.getMethod("literal", String.class);
             Object comp = literalMethod.invoke(null, message);
 

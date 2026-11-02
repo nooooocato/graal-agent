@@ -4,6 +4,7 @@ import com.mcagent.script.ScriptManager;
 import com.mcagent.util.Logger;
 
 import java.lang.classfile.*;
+import java.lang.classfile.instruction.InvokeInstruction;
 import java.lang.classfile.instruction.ReturnInstruction;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
@@ -43,6 +44,8 @@ public class MinecraftTransformer implements ClassFileTransformer {
                 currentBytes = transformMinecraftServer(currentBytes);
             } else if (className.equals("net/minecraft/commands/Commands")) {
                 currentBytes = transformCommands(currentBytes);
+            } else if (className.equals("net/minecraft/bundler/Main")) {
+                currentBytes = transformBundlerMain(currentBytes);
             }
 
             // Custom JavaScript transformers (delegated through ScriptManager's lock)
@@ -301,6 +304,33 @@ public class MinecraftTransformer implements ClassFileTransformer {
                                     "onRegisterServerCommands",
                                     MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
                             );
+                        }
+                        cb.with(ce);
+                    }
+                }));
+                return;
+            }
+            builder.with(element);
+        };
+        return classFile.transformClass(cm, ct);
+    }
+
+    private byte[] transformBundlerMain(byte[] bytes) {
+        Logger.info("Instrumenting net.minecraft.bundler.Main (parent classloader hook)...");
+        ClassModel cm = classFile.parse(bytes);
+        ClassTransform ct = (builder, element) -> {
+            if (element instanceof MethodModel mm
+                    && mm.methodName().stringValue().equals("run")
+                    && mm.methodType().stringValue().equals("([Ljava/lang/String;)V")) {
+                builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                    @Override
+                    public void accept(CodeBuilder cb, CodeElement ce) {
+                        if (ce instanceof InvokeInstruction inv
+                                && inv.owner().asInternalName().equals("java/lang/ClassLoader")
+                                && inv.name().stringValue().equals("getParent")
+                                && inv.type().stringValue().equals("()Ljava/lang/ClassLoader;")) {
+                            Logger.info("Replaced Bundler URLClassLoader parent with AppClassLoader for Agent visibility.");
+                            return;
                         }
                         cb.with(ce);
                     }

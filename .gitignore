@@ -4,3 +4,5 @@ agent.log
 mc-agent.jar
 mc-agent.jar.new
 *.class
+server/
+server

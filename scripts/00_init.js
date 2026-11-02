@@ -9,7 +9,10 @@ console.log("==========================================");
 // 监听游戏初始化事件
 events.onInit((minecraft) => {
     console.log("[Init] Minecraft 实例已就绪!");
-    console.log("[Init] 启动版本: " + minecraft.getLaunchedVersion());
+    const version = (minecraft && minecraft.getLaunchedVersion) 
+        ? minecraft.getLaunchedVersion() 
+        : ((minecraft && minecraft.getServerVersion) ? minecraft.getServerVersion() : "26.3");
+    console.log("[Init] 启动版本: " + version);
     
     // 定时检查玩家登录状态并发送欢迎消息
     const checkTimer = setInterval(() => {
