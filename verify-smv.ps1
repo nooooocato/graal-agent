@@ -1,3 +1,7 @@
+param(
+    [string]$Script = "scripts\11_server_plugins_verify.js"
+)
+
 # PowerShell 7 SMV JavaScript Verification Runner
 $ErrorActionPreference = "Stop"
 
@@ -38,6 +42,6 @@ if (Test-Path $brigadierJar) {
     $runCp = "$outDir;$testOutDir;$libCp;$brigadierJar"
 }
 
-$scriptPath = Join-Path $agentDir "scripts\08_smv_method_virtualization_verify.js"
+$scriptPath = Join-Path $agentDir $Script
 & $java -ea "-Dfile.encoding=UTF-8" -cp $runCp com.graalagent.test.RunJsRunner $scriptPath
 exit $LASTEXITCODE
