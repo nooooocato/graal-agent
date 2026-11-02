@@ -2,7 +2,7 @@
 
 ---
 
-- [ ] **Track: 第一阶段：基础设施重构与统一指令网关 (Foundation Infrastructure & Command Gateway)**
+- [~] **Track: 第一阶段：基础设施重构与统一指令网关 (Foundation Infrastructure & Command Gateway)**
   *Link: [./tracks/phase1_foundation_infra_20261103/index.md](./tracks/phase1_foundation_infra_20261103/index.md)*
 
 - [ ] **Track: 第二阶段：影子方法虚拟化网格与插桩解耦 (SMV Bytecode Mesh & Plugin Pipeline)**
