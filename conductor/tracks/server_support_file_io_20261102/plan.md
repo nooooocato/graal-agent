@@ -21,20 +21,20 @@
     - [x] Run automated tests and verify build with `build.ps1`
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [dc8bc90]
 
-## Phase 3: Server Brigadier Command Integration
+## Phase 3: Server Brigadier Command Integration [checkpoint: 3785a87]
 - [x] Task: Create Tests for Server Command Dispatcher [996ed07]
     - [x] Write tests verifying server command node registration for `/js` and `/reloadjs`
 - [x] Task: Implement Bytecode Transformer for Server Commands [a0899dd]
     - [x] Instrument `net.minecraft.commands.Commands` to register `/js`, `/reloadjs`, and dynamic commands
     - [x] Ensure permission level check (requires op / level 2+ on dedicated servers)
     - [x] Run automated tests and verify command execution
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [3785a87]
 
-## Phase 4: Dynamic Datapack Injection & Hot Reload
+## Phase 4: Dynamic Datapack Injection & Hot Reload [checkpoint: a8aafa4]
 - [x] Task: Create Tests for Datapack Auto-Discovery [0371be0]
     - [x] Write tests for detecting and indexing `scripts/datapacks/`
-- [ ] Task: Implement PackRepository Bytecode Hook & Server Resource Reload
-    - [ ] Instrument `PackRepository` to automatically inject scripts datapack sources
-    - [ ] Wire `/reloadjs` to invoke `MinecraftServer.reloadResources(...)`
-    - [ ] Provide sample script synthesizing a custom datapack recipe
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement PackRepository Bytecode Hook & Server Resource Reload [a8aafa4]
+    - [x] Instrument `PackRepository` to automatically inject scripts datapack sources
+    - [x] Wire `/reloadjs` to invoke `MinecraftServer.reloadResources(...)`
+    - [x] Provide sample script synthesizing a custom datapack recipe
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [a8aafa4]
