@@ -181,7 +181,6 @@ public class ScriptManager {
         Logger.info("Reloading JavaScript scripts from " + scriptsDir.getAbsolutePath() + "...");
         initContext();
         loadAllScripts();
-        com.mcagent.datapack.DatapackManager.reloadServerResources();
 
         Object s = AgentBridge.getServer();
         if (s != null) {

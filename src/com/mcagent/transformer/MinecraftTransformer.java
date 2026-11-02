@@ -286,6 +286,25 @@ public class MinecraftTransformer implements ClassFileTransformer {
                     }));
                     return;
                 }
+
+                // 3. reloadResources hook (trigger JS reload when vanilla datapack reload completes)
+                if (methodName.equals("reloadResources")
+                        && methodDesc.equals("(Ljava/util/Collection;)Ljava/util/concurrent/CompletableFuture;")) {
+                    builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                        @Override
+                        public void accept(CodeBuilder cb, CodeElement ce) {
+                            if (ce instanceof ReturnInstruction) {
+                                cb.invokestatic(
+                                        ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+                                        "onServerReloadResources",
+                                        MethodTypeDesc.ofDescriptor("(Ljava/util/concurrent/CompletableFuture;)Ljava/util/concurrent/CompletableFuture;")
+                                );
+                            }
+                            cb.with(ce);
+                        }
+                    }));
+                    return;
+                }
             }
             builder.with(element);
         };

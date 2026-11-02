@@ -136,6 +136,28 @@ public class AgentBridge {
     }
 
     public static java.util.concurrent.CompletableFuture<Void> onServerReloadResources(java.util.concurrent.CompletableFuture<Void> future) {
+        if (future != null) {
+            return future.thenApply(v -> {
+                Logger.info("Vanilla reloadResources completed. Automatically triggering JS reload...");
+                Object server = getServer();
+                Runnable reloadTask = () -> {
+                    ScriptManager sm = ScriptManager.getInstance();
+                    if (sm != null) {
+                        sm.reload();
+                    }
+                };
+
+                if (server != null) {
+                    try {
+                        Method execute = server.getClass().getMethod("execute", Runnable.class);
+                        execute.invoke(server, reloadTask);
+                        return v;
+                    } catch (Throwable ignored) {}
+                }
+                reloadTask.run();
+                return v;
+            });
+        }
         return future;
     }
 
