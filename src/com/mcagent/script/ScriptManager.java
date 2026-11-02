@@ -259,6 +259,12 @@ public class ScriptManager {
         initContext();
         loadAllScripts();
         com.mcagent.datapack.DatapackManager.reloadServerResources();
+
+        Object s = AgentBridge.getServer();
+        if (s != null) {
+            com.mcagent.server.ServerCommandDispatcher.syncCommandsToPlayers(s);
+        }
+
         AgentBridge.sendChatMessage("§a[MC-JS-Agent] 脚本全部重新加载成功！");
     }
 
@@ -444,6 +450,17 @@ public class ScriptManager {
         this.lastDispatcher = dispatcher;
 
         try {
+            // Client always registers local debug commands /cjs and /clientjs
+            registerCommandToBrigadier(dispatcher, "cjs");
+            registerCommandToBrigadier(dispatcher, "clientjs");
+
+            // In multiplayer mode, client autocompletion is driven exclusively by the server's network packet.
+            // Do not inject client-local custom commands to prevent pollution / desync.
+            if (AgentBridge.isMultiplayer()) {
+                return;
+            }
+
+            // In singleplayer / integrated server mode, inject local custom commands
             for (String cmdName : customCommands.keySet()) {
                 registerCommandToBrigadier(dispatcher, cmdName);
             }

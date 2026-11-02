@@ -115,6 +115,59 @@ public class ServerCommandDispatcher {
         }
     }
 
+    public static void syncCommandsToPlayers(Object server) {
+        if (server == null) {
+            return;
+        }
+
+        try {
+            Method getPlayerList = server.getClass().getMethod("getPlayerList");
+            Object playerList = getPlayerList.invoke(server);
+            if (playerList == null) {
+                return;
+            }
+
+            Method getPlayers = playerList.getClass().getMethod("getPlayers");
+            Object playersObj = getPlayers.invoke(playerList);
+            if (!(playersObj instanceof Iterable<?> players)) {
+                return;
+            }
+
+            Method getCommands = server.getClass().getMethod("getCommands");
+            Object commands = getCommands.invoke(server);
+            if (commands == null) {
+                return;
+            }
+
+            Method sendCommandsMethod = null;
+            for (Method m : commands.getClass().getMethods()) {
+                if ("sendCommands".equals(m.getName()) && m.getParameterCount() == 1) {
+                    sendCommandsMethod = m;
+                    break;
+                }
+            }
+
+            if (sendCommandsMethod == null) {
+                return;
+            }
+
+            int count = 0;
+            for (Object player : players) {
+                try {
+                    sendCommandsMethod.invoke(commands, player);
+                    count++;
+                } catch (Throwable t) {
+                    Logger.error("Failed to sync commands to player: " + player, t);
+                }
+            }
+            if (count > 0) {
+                Logger.info("Pushed updated Brigadier command tree to " + count + " connected player(s).");
+            }
+        } catch (Throwable t) {
+            Logger.warn("Could not push command updates to players: " + t.getMessage());
+        }
+    }
+
     public static boolean checkPermission(Object source) {
         if (source == null) {
             return true; // Console or test context

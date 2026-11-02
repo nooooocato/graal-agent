@@ -32,6 +32,24 @@ public class Assert {
         }
     }
 
+    public static void assertNotNull(Object obj, String message) {
+        if (obj == null) {
+            throw new AssertionError("Assertion failed: " + message);
+        }
+    }
+
+    public static void assertNull(Object obj) {
+        if (obj != null) {
+            throw new AssertionError("Expected null object but was: " + obj);
+        }
+    }
+
+    public static void assertNull(Object obj, String message) {
+        if (obj != null) {
+            throw new AssertionError("Assertion failed: " + message + " (was: " + obj + ")");
+        }
+    }
+
     public static <T extends Throwable> T assertThrows(Class<T> expectedType, Executable executable) {
         try {
             executable.execute();
