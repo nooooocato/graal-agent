@@ -1,8 +1,13 @@
 package com.mcagent.server;
 
+import com.mcagent.script.ScriptManager;
 import com.mcagent.test.Assert;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ServerCommandTest {
 
@@ -30,5 +35,55 @@ public class ServerCommandTest {
         Object mockSource = new Object();
         int result = dispatcher.execute("reloadjs", mockSource);
         Assert.assertEquals(1, result);
+    }
+
+    public void testZeroArgumentCustomCommandExecution() throws Exception {
+        Path tempDir = Files.createTempDirectory("mcagent-server-cmd-test-");
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        sm.evalInline("globalThis.serverinfoCalls = 0; globalThis.lastArgs = null; agent.registerCommand('serverinfo', function(args) { globalThis.serverinfoCalls++; globalThis.lastArgs = args; });");
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        Object mockSource = new Object();
+        // 1. Zero-argument invocation: /serverinfo
+        int resultZero = dispatcher.execute("serverinfo", mockSource);
+        Assert.assertEquals(1, resultZero);
+        Assert.assertEquals("1", sm.evalInline("String(globalThis.serverinfoCalls)"));
+        Assert.assertEquals("", sm.evalInline("String(globalThis.lastArgs)"));
+
+        // 2. Argument invocation: /serverinfo extra details
+        int resultArgs = dispatcher.execute("serverinfo extra details", mockSource);
+        Assert.assertEquals(1, resultArgs);
+        Assert.assertEquals("2", sm.evalInline("String(globalThis.serverinfoCalls)"));
+        Assert.assertEquals("extra details", sm.evalInline("String(globalThis.lastArgs)"));
+    }
+
+    public void testCustomCommandDynamicCallbackResolutionAcrossReload() throws Exception {
+        Path tempDir = Files.createTempDirectory("mcagent-reload-cmd-test-");
+        File scriptFile = tempDir.resolve("01_test.js").toFile();
+        Files.writeString(scriptFile.toPath(), "agent.registerCommand('fstest', function(args) { globalThis.fstestValue = 'v1:' + args; });");
+
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        Object mockSource = new Object();
+        int res1 = dispatcher.execute("fstest initial", mockSource);
+        Assert.assertEquals(1, res1);
+        Assert.assertEquals("v1:initial", sm.evalInline("globalThis.fstestValue"));
+
+        // Update script and reload
+        Files.writeString(scriptFile.toPath(), "agent.registerCommand('fstest', function(args) { globalThis.fstestValue = 'v2:' + args; });");
+        sm.reload();
+
+        // Dispatch command on previously registered dispatcher
+        int res2 = dispatcher.execute("fstest reloaded", mockSource);
+        Assert.assertEquals(1, res2);
+        Assert.assertEquals("v2:reloaded", sm.evalInline("globalThis.fstestValue"));
     }
 }
