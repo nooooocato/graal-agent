@@ -27,9 +27,9 @@
     - [x] 编写测试验证玩家执行 `Java.type(...)` 抛出安全异常
     - [x] 编写测试验证玩家执行 `agent.fs.writeFile(...)` 抛出权限拒绝
     - [x] 编写测试验证控制台来源依然具备完整执行权限
-- [~] Task: 实现执行来源识别与降权沙箱引擎 (Green Phase)
-    - [ ] 在 `ServerCommandDispatcher` 中区分指令来源（控制台 vs 游戏内玩家）
-    - [ ] 在 `ScriptManager` 中为玩家穿透执行提供受限环境（屏蔽 `Java` 全局对象，禁用写文件操作）
+- [x] Task: 实现执行来源识别与降权沙箱引擎 (Green Phase) 164e92c
+    - [x] 在 `ServerCommandDispatcher` 中区分指令来源（控制台 vs 游戏内玩家）
+    - [x] 在 `ScriptManager` 中为玩家穿透执行提供受限环境（屏蔽 `Java` 全局对象，禁用写文件操作）
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 原版 /reload 与 /reloadjs 包含关系重构
