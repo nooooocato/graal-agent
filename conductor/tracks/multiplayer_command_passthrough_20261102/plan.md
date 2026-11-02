@@ -4,10 +4,10 @@
 - [x] Task: 编写服务端指令无参执行与重载解耦单元测试 (Red Phase) ba37cc4
     - [x] 编写测试用例验证无参调用 `serverinfo`、`fstest` 的语法树解析
     - [x] 编写测试用例验证执行 `/reloadjs` 后再调用自定义指令不报上下文已关闭
-- [ ] Task: 修复 ServerCommandDispatcher 指令注册与动态回调解析 (Green Phase)
-    - [ ] 在 `customLiteral` 节点上增加 `executesLiteral.invoke(customLiteral, customCommand)` 支持无参调用
-    - [ ] 改造 `handleCustomExecution` 为执行时动态获取 `ScriptManager.getInstance().getCustomCommands().get(cmdName)`
-    - [ ] 修复 `EnvironmentContext.broadcastMessage` 中加载 `Component` 的类加载器
+- [x] Task: 修复 ServerCommandDispatcher 指令注册与动态回调解析 (Green Phase) e0f92ab
+    - [x] 在 `customLiteral` 节点上增加 `executesLiteral.invoke(customLiteral, customCommand)` 支持无参调用
+    - [x] 改造 `handleCustomExecution` 为执行时动态获取 `ScriptManager.getInstance().getCustomCommands().get(cmdName)`
+    - [x] 修复 `EnvironmentContext.broadcastMessage` 中加载 `Component` 的类加载器
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 客户端指令穿透与提示动态同步
