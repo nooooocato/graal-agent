@@ -34,15 +34,24 @@ public class AgentAPI {
     }
 
     public ScriptFileSystem getFs() {
+        if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+            throw new SecurityException("安全权限拒绝: 游戏内玩家禁止访问服务器文件系统 (agent.fs)");
+        }
         return fs;
     }
 
     public void reload() {
+        if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+            throw new SecurityException("安全权限拒绝: 游戏内玩家禁止执行系统热重载 (agent.reload)");
+        }
         Logger.info("Reload requested via agent.reload().");
         scriptManager.reload();
     }
 
     public Object eval(String jsCode) {
+        if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+            throw new SecurityException("安全权限拒绝: 游戏内玩家禁止调用 agent.eval");
+        }
         return scriptManager.evalInline(jsCode);
     }
 
@@ -59,6 +68,9 @@ public class AgentAPI {
     }
 
     public String createDatapack(String id, String description) {
+        if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+            throw new SecurityException("安全权限拒绝: 游戏内玩家禁止创建数据包 (agent.createDatapack)");
+        }
         try {
             java.nio.file.Path p = com.mcagent.datapack.DatapackManager.createSyntheticPack(scriptsDir, id, description, 61);
             return p.toString();

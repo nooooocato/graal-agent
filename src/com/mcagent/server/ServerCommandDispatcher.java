@@ -208,20 +208,52 @@ public class ServerCommandDispatcher {
     }
 
     private static int handleJsExecution(Object context) {
+        Method getSource = null;
+        Object source = null;
         try {
-            Method getSource = context.getClass().getMethod("getSource");
-            Object source = getSource.invoke(context);
+            getSource = context.getClass().getMethod("getSource");
+            source = getSource.invoke(context);
+        } catch (Throwable ignored) {}
 
+        try {
             Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
             String code = (String) getArgument.invoke(context, "code", String.class);
 
-            ScriptManager sm = ScriptManager.getInstance();
-            Object result = sm != null ? sm.evalInline(code) : "ScriptManager not initialized";
+            Object player = null;
+            boolean isConsole = true;
+            if (source != null) {
+                try {
+                    Method getPlayer = source.getClass().getMethod("getPlayer");
+                    player = getPlayer.invoke(source);
+                    if (player != null) {
+                        isConsole = false;
+                    }
+                } catch (Throwable ignored) {}
+            }
 
-            sendFeedback(source, "§e=> " + result, false);
-            return 1;
+            ScriptManager sm = ScriptManager.getInstance();
+            if (sm == null) {
+                sendFeedback(source, "§c[JS 错误] ScriptManager 未初始化", false);
+                return 0;
+            }
+
+            Object result;
+            if (isConsole) {
+                result = sm.evalInline(code);
+                sendFeedback(source, "§e=> " + result, false);
+                return 1;
+            } else {
+                result = sm.evalSandboxed(code, player);
+                sendFeedback(source, "§e=> " + result, false);
+                return 1;
+            }
         } catch (Throwable t) {
-            Logger.error("Error executing server /js command", t);
+            String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
+            if (t.getCause() != null && t.getCause().getMessage() != null) {
+                errorMsg = t.getCause().getMessage();
+            }
+            Logger.error("Error executing server /js command: " + errorMsg, t);
+            sendFeedback(source, "§c[安全限制] " + errorMsg, false);
             return 0;
         }
     }
@@ -299,13 +331,31 @@ public class ServerCommandDispatcher {
             if (cl == null) {
                 cl = ClassLoader.getSystemClassLoader();
             }
-            Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
-            Method literalMethod = compClass.getMethod("literal", String.class);
-            Object comp = literalMethod.invoke(null, message);
+            Class<?> compClass = null;
+            try {
+                compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
+            } catch (ClassNotFoundException ignored) {}
 
-            Supplier<?> supplier = () -> comp;
-            Method sendSuccess = source.getClass().getMethod("sendSuccess", Supplier.class, boolean.class);
-            sendSuccess.invoke(source, supplier, broadcastToOps);
+            Supplier<?> supplier;
+            if (compClass != null) {
+                Method literalMethod = compClass.getMethod("literal", String.class);
+                Object comp = literalMethod.invoke(null, message);
+                supplier = () -> comp;
+            } else {
+                supplier = () -> message;
+            }
+
+            try {
+                Method sendSuccess = source.getClass().getMethod("sendSuccess", Supplier.class, boolean.class);
+                sendSuccess.invoke(source, supplier, broadcastToOps);
+            } catch (NoSuchMethodException e) {
+                try {
+                    Method sendSuccess2 = source.getClass().getMethod("sendSuccess", Object.class, boolean.class);
+                    sendSuccess2.invoke(source, supplier.get(), broadcastToOps);
+                } catch (NoSuchMethodException e2) {
+                    Logger.info(message);
+                }
+            }
             Logger.logToFileOnly("[Command Feedback] " + message);
             return;
         } catch (Throwable t) {

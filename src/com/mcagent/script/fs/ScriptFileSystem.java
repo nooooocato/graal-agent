@@ -31,6 +31,9 @@ public class ScriptFileSystem {
     }
 
     public Path resolvePath(String relativePath) {
+        if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+            throw new SecurityException("安全权限拒绝: 游戏内玩家禁止访问服务器文件系统 (ScriptFileSystem)");
+        }
         if (relativePath == null) {
             throw new IllegalArgumentException("Path cannot be null");
         }

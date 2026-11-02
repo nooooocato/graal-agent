@@ -160,96 +160,19 @@ public class ScriptManager {
 
         context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
-                .allowHostClassLookup(c -> true)
+                .allowHostClassLookup(className -> {
+                    if (com.mcagent.security.ScriptSandbox.isSandboxed()) {
+                        throw new SecurityException("安全限制: 游戏内玩家禁止通过 Java.type 访问 Java 主机类 (" + className + ")");
+                    }
+                    return true;
+                })
                 .allowIO(IOAccess.ALL)
                 .allowExperimentalOptions(true)
                 .option("js.nashorn-compat", "true")
                 .option("js.ecmascript-version", "latest")
                 .build();
 
-        Value bindings = context.getBindings("js");
-
-        // Expose APIs
-        bindings.putMember("agent", agentAPI);
-        bindings.putMember("events", eventBus);
-        bindings.putMember("__getMinecraft", (Supplier<Object>) AgentBridge::getMinecraft);
-        bindings.putMember("__getMinecraftServer", (Supplier<Object>) AgentBridge::getServer);
-        bindings.putMember("__getCommandPlayer", (Supplier<Object>) ScriptManager::getCurrentCommandPlayer);
-        bindings.putMember("__isConsoleCommand", (Supplier<Boolean>) ScriptManager::isCommandExecutingFromConsole);
-
-        // Define standard browser/Node utilities and dynamic MC globals
-        context.eval("js", """
-            // Console implementation
-            const console = {
-                log: (...args) => agent.log(args.map(x => String(x)).join(' ')),
-                info: (...args) => agent.log('[INFO] ' + args.map(x => String(x)).join(' ')),
-                warn: (...args) => agent.log('[WARN] ' + args.map(x => String(x)).join(' ')),
-                error: (...args) => agent.log('[ERROR] ' + args.map(x => String(x)).join(' '))
-            };
-            const print = (...args) => console.log(...args);
-
-            // Timer wrappers
-            const setTimeout = (fn, delay) => agent.setTimeout(fn, delay || 0);
-            const clearTimeout = (id) => agent.clearTimeout(id);
-            const setInterval = (fn, interval) => agent.setInterval(fn, interval || 0);
-            const clearInterval = (id) => agent.clearInterval(id);
-
-            // Dynamic getters for Minecraft singletons
-            Object.defineProperty(globalThis, 'mc', {
-                get: () => __getMinecraft(),
-                configurable: true
-            });
-
-            Object.defineProperty(globalThis, 'player', {
-                get: () => {
-                    const cmdPlayer = __getCommandPlayer();
-                    if (cmdPlayer) return cmdPlayer;
-                    const m = __getMinecraft();
-                    if (m && m.player) return m.player;
-                    if (__isConsoleCommand()) {
-                        throw new Error("缺少玩家实体参数 (player is null): 控制台无法执行需要玩家上下文的操作");
-                    }
-                    return null;
-                },
-                configurable: true
-            });
-
-            Object.defineProperty(globalThis, 'world', {
-                get: () => {
-                    const cmdPlayer = __getCommandPlayer();
-                    if (cmdPlayer && cmdPlayer.level) {
-                        try {
-                            return typeof cmdPlayer.level === 'function' ? cmdPlayer.level() : cmdPlayer.level;
-                        } catch (e) {}
-                    }
-                    const m = __getMinecraft();
-                    if (m && m.level) return m.level;
-                    const s = __getMinecraftServer();
-                    if (s && s.overworld) {
-                        try {
-                            return typeof s.overworld === 'function' ? s.overworld() : s.overworld;
-                        } catch (e) {}
-                    }
-                    return null;
-                },
-                configurable: true
-            });
-
-            Object.defineProperty(globalThis, 'level', {
-                get: () => globalThis.world,
-                configurable: true
-            });
-
-            Object.defineProperty(globalThis, 'server', {
-                get: () => __getMinecraftServer(),
-                configurable: true
-            });
-
-            Object.defineProperty(globalThis, 'fs', {
-                get: () => agent.fs,
-                configurable: true
-            });
-        """);
+        ScriptGlobals.setupBindings(context, agentAPI, eventBus);
 
         Logger.info("JavaScript Polyglot Context initialized successfully.");
     }
@@ -307,6 +230,21 @@ public class ScriptManager {
             return result.toString();
         } catch (Throwable t) {
             return "Error: " + t.getMessage();
+        }
+    }
+
+    public synchronized Object evalSandboxed(String code, Object player) throws Exception {
+        if (context == null) throw new IllegalStateException("Context not initialized");
+        try {
+            com.mcagent.security.ScriptSandbox.setSandboxed(true);
+            setCommandExecutionContext(player, false);
+            Value result = context.eval("js", code);
+            if (result == null || result.isNull()) return "null";
+            if (result.isHostObject()) return result.asHostObject();
+            return result.toString();
+        } finally {
+            clearCommandExecutionContext();
+            com.mcagent.security.ScriptSandbox.clear();
         }
     }
 
