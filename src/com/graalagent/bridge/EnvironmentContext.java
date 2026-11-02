@@ -2,7 +2,7 @@ package com.graalagent.bridge;
 
 import com.graalagent.util.Logger;
 
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
 
 public class EnvironmentContext {
     private final Object clientInstance;
@@ -55,8 +55,8 @@ public class EnvironmentContext {
         Object target = (isDedicatedServer() || clientInstance == null) ? serverInstance : clientInstance;
         if (target != null) {
             try {
-                Method isSameThread = target.getClass().getMethod("isSameThread");
-                boolean same = (boolean) isSameThread.invoke(target);
+                MethodHandle isSameThreadMh = MethodHandleCache.findVirtualByName(target.getClass(), "isSameThread");
+                boolean same = (boolean) isSameThreadMh.invoke(target);
                 if (same) {
                     runnable.run();
                     return;
@@ -64,8 +64,8 @@ public class EnvironmentContext {
             } catch (Throwable ignored) {}
 
             try {
-                Method executeMethod = target.getClass().getMethod("execute", Runnable.class);
-                executeMethod.invoke(target, runnable);
+                MethodHandle executeMh = MethodHandleCache.findVirtualByName(target.getClass(), "execute", Runnable.class);
+                executeMh.invoke(target, runnable);
                 return;
             } catch (Throwable t) {
                 Logger.error("Failed to dispatch execution on target " + target.getClass().getName(), t);
@@ -88,25 +88,23 @@ public class EnvironmentContext {
                     cl = ClassLoader.getSystemClassLoader();
                 }
                 Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
-                Method literalMethod = compClass.getMethod("literal", String.class);
-                Object comp = literalMethod.invoke(null, message);
+                MethodHandle literalMh = MethodHandleCache.findStaticByName(compClass, "literal", String.class);
+                Object comp = literalMh.invoke(message);
 
                 boolean sent = false;
                 try {
-                    Method getPlayerList = serverInstance.getClass().getMethod("getPlayerList");
-                    Object playerList = getPlayerList.invoke(serverInstance);
+                    MethodHandle getPlayerListMh = MethodHandleCache.findVirtualByName(serverInstance.getClass(), "getPlayerList");
+                    Object playerList = getPlayerListMh.invoke(serverInstance);
                     if (playerList != null) {
-                        // In vanilla Minecraft, playerList.broadcastSystemMessage forwards to
-                        // server.sendSystemMessage (console) AND all connected players.
-                        Method broadcast = playerList.getClass().getMethod("broadcastSystemMessage", compClass, boolean.class);
-                        broadcast.invoke(playerList, comp, false);
+                        MethodHandle broadcastMh = MethodHandleCache.findVirtualByName(playerList.getClass(), "broadcastSystemMessage", compClass, boolean.class);
+                        broadcastMh.invoke(playerList, comp, false);
                         sent = true;
                     }
                 } catch (Throwable ignored) {}
 
                 if (!sent) {
-                    Method sendSystem = serverInstance.getClass().getMethod("sendSystemMessage", compClass);
-                    sendSystem.invoke(serverInstance, comp);
+                    MethodHandle sendSystemMh = MethodHandleCache.findVirtualByName(serverInstance.getClass(), "sendSystemMessage", compClass);
+                    sendSystemMh.invoke(serverInstance, comp);
                 }
 
                 Logger.logToFileOnly("[Broadcast] " + message);

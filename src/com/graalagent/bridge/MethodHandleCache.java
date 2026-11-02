@@ -40,6 +40,40 @@ public final class MethodHandleCache {
         });
     }
 
+    public static MethodHandle findVirtualByName(Class<?> clazz, String name, Class<?>... parameterTypes) {
+        StringBuilder sb = new StringBuilder(clazz.getName()).append("#").append(name).append("(");
+        for (Class<?> p : parameterTypes) {
+            sb.append(p.getName()).append(";");
+        }
+        sb.append(")");
+        String key = sb.toString();
+        return CACHE.computeIfAbsent(key, k -> {
+            try {
+                java.lang.reflect.Method m = clazz.getMethod(name, parameterTypes);
+                return LOOKUP.unreflect(m);
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                throw new RuntimeException("Failed to unreflect virtual MethodHandle for " + k, e);
+            }
+        });
+    }
+
+    public static MethodHandle findStaticByName(Class<?> clazz, String name, Class<?>... parameterTypes) {
+        StringBuilder sb = new StringBuilder(clazz.getName()).append("#").append(name).append("$static(");
+        for (Class<?> p : parameterTypes) {
+            sb.append(p.getName()).append(";");
+        }
+        sb.append(")");
+        String key = sb.toString();
+        return CACHE.computeIfAbsent(key, k -> {
+            try {
+                java.lang.reflect.Method m = clazz.getMethod(name, parameterTypes);
+                return LOOKUP.unreflect(m);
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                throw new RuntimeException("Failed to unreflect static MethodHandle for " + k, e);
+            }
+        });
+    }
+
     public static MethodHandle get(String key) {
         return CACHE.get(key);
     }
