@@ -28,12 +28,19 @@ if ($srcFiles.Count -gt 0) {
 }
 
 # 2. Compile test files
+$brigadierJar = "H:\mc-mod\.minecraft\libraries\com\mojang\brigadier\1.3.11\brigadier-1.3.11.jar"
 $testCp = "$outDir;$libCp"
+if (Test-Path $brigadierJar) {
+    $testCp = "$outDir;$libCp;$brigadierJar"
+}
 if ($testFiles.Count -gt 0) {
     & $javac -encoding UTF-8 -cp $testCp -d $testOutDir $testFiles
 }
 
 # 3. Execute Test Runner
 $runCp = "$outDir;$testOutDir;$libCp"
+if (Test-Path $brigadierJar) {
+    $runCp = "$outDir;$testOutDir;$libCp;$brigadierJar"
+}
 & $java -ea "-Dfile.encoding=UTF-8" -cp $runCp com.mcagent.test.TestRunner @args
 exit $LASTEXITCODE
