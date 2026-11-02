@@ -1,8 +1,8 @@
-# Product Guidelines: Minecraft 26.3 JavaScript Agent (`mc-agent`)
+# Product Guidelines: Minecraft 26.3 JavaScript Agent (`graal-agent`)
 
 ## 1. Tone & Voice
 - **Developer-Centric & Precise:** Technical, unambiguous, and developer-first documentation and diagnostics.
-- **Structured Logging:** Standardized log prefixes `[MC-AGENT] [INFO/WARN/ERROR]` with explicit context (source script, class, or event type).
+- **Structured Logging:** Standardized log prefixes `[GRAAL-AGENT] [INFO/WARN/ERROR]` with explicit context (source script, class, or event type).
 - **In-Game UX:** Clean, color-coded Minecraft chat feedback (e.g., `§a` green for success, `§c` red for errors, `§e` yellow for warnings, `§7` gray for secondary info). Never clutter the chat stream unless requested by user commands.
 
 ## 2. API Design Principles

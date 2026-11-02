@@ -1,5 +1,5 @@
 ---
-title: mcpack 模块化微包规范与包管理器 (Package System Specification)
+title: graalpack 模块化微包规范与包管理器 (Package System Specification)
 date: 2026-11-02
 tags:
   - "#/package"
@@ -7,13 +7,13 @@ tags:
   - "#/architecture"
 ---
 
-# mcpack 模块化微包规范与包管理器 (Package System Specification)
+# graalpack 模块化微包规范与包管理器 (Package System Specification)
 
 ## 1. 概述与设计理念
 
-`mcpack` 是 `mc-agent` 生态中的**原子级自包含扩展模块**。它借鉴了现代前端（npm）与高级包管理器的设计哲学，彻底改变了传统 Minecraft 模组散乱放置在 `mods/` 目录且无法声明统一依赖的混乱现状。
+`graalpack` 是 `graal-agent` 生态中的**原子级自包含扩展模块**。它借鉴了现代前端（npm）与高级包管理器的设计哲学，彻底改变了传统 Minecraft 模组散乱放置在 `mods/` 目录且无法声明统一依赖的混乱现状。
 
-每个 `mcpack` 都是一个高度内聚的目录（或 `.mcpack` 压缩归档），能够把 **高性能动态 Java 源码、敏捷 JS 脚本、原版数据包、资源包以及依赖清单** 捆绑在一起。
+每个 `graalpack` 都是一个高度内聚的目录（或 `.graalpack` 压缩归档），能够把 **高性能动态 Java 源码、敏捷 JS 脚本、原版数据包、资源包以及依赖清单** 捆绑在一起。
 
 ---
 
@@ -24,7 +24,7 @@ tags:
 ```
 packages/
 └── magic-combat/
-    ├── mcpack.json               # [必须] 微包核心清单描述文件
+    ├── graalpack.json               # [必须] 微包核心清单描述文件
     ├── README.md                 # [可选] 说明文档
     ├── src/                      # [可选] 动态 Java 25 源码 (内存编译)
     │   ├── CombatArbitrator.java # 冲突仲裁与高性能 Hook
@@ -43,13 +43,13 @@ packages/
 
 ---
 
-## 3. 清单规范 (`mcpack.json` Schema)
+## 3. 清单规范 (`graalpack.json` Schema)
 
-`mcpack.json` 采用严格的 UTF-8 编码 JSON 格式。示例如下：
+`graalpack.json` 采用严格的 UTF-8 编码 JSON 格式。示例如下：
 
 ```json
 {
-  "$schema": "https://mc-agent.com/schemas/mcpack-v1.json",
+  "$schema": "https://graal-agent.com/schemas/graalpack-v1.json",
   "id": "magic-combat",
   "name": "Magic & Combat Overhaul",
   "version": "1.2.0",
@@ -105,7 +105,7 @@ packages/
 
 ```mermaid
 flowchart TD
-    A["扫描 packages/ 目录"] --> B["解析所有 mcpack.json 清单"]
+    A["扫描 packages/ 目录"] --> B["解析所有 graalpack.json 清单"]
     B --> C["构建依赖拓扑图 (Dependency DAG)"]
     C --> D{"是否存在循环依赖?"}
     D -- 是 --> E["报错中断并输出环形依赖路径 (Cycle Trace)"]
@@ -128,7 +128,7 @@ flowchart TD
    - 联动 `WatchService` 实现单个微包的独立热重载。
 2. **第二阶段：远程仓库与在线依赖安装**
    - 接入 Modrinth API、CurseForge API 与官方微包 Hub。
-   - 提供游戏内与控制台指令：`/mcpack install <package-id>`。
+   - 提供游戏内与控制台指令：`/graalpack install <package-id>`。
    - 自动解析远程依赖树，补全缺失的第三方 ModLoader jar 与依赖微包。
 
 ---

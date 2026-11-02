@@ -15,7 +15,7 @@ Minecraft 模组生态长期处于割裂状态：
 - **Fabric 生态：** 基于 `net.fabricmc.loader.impl.launch.knot.KnotClassLoader`，核心以 SpongePowered Mixin 作为唯一的字节码操作手段，推崇轻量与快速更新。
 - **NeoForge / Forge 生态：** 基于 `cpw.mods.modlauncher.TransformingClassLoader`，拥有庞大的事件总线（EventBus）、Capability/Attachment 系统以及复杂的 CoreMod / AccessTransformer 机制。
 
-传统的模组只能在其中选择一个阵营。而 `mc-agent` 作为运行在 JVM `-javaagent` 顶层的元加载器，目标是**提供跨 Loader 的和平共存与协同调度能力**。
+传统的模组只能在其中选择一个阵营。而 `graal-agent` 作为运行在 JVM `-javaagent` 顶层的元加载器，目标是**提供跨 Loader 的和平共存与协同调度能力**。
 
 ---
 
@@ -27,7 +27,7 @@ sequenceDiagram
     participant JVM as JVM ClassLoader Engine
     participant Loader as ModLoader (Knot / ModLauncher)
     participant Mixin as Third-Party Mixin / CoreMod
-    participant Agent as mc-agent (ClassFileTransformer)
+    participant Agent as graal-agent (ClassFileTransformer)
 
     Note over JVM,Agent: 游戏类加载触发 (如 Player.class)
     JVM->>Loader: loadClass("Player")
@@ -56,7 +56,7 @@ builder.transformMethod(methodModel, MethodTransform.transformingCode((codeBuild
     if (codeElement instanceof ReturnInstruction returnInst) {
         // 匹配到真实的语义返回点（无论前面被 Mixin 插入了多少指令）
         codeBuilder.invokestatic(
-            ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+            ClassDesc.of("com.graalagent.bridge.AgentBridge"),
             "onMethodExitHook",
             MethodTypeDesc.ofDescriptor("()V")
         );
@@ -106,5 +106,5 @@ public class EnvironmentDetector {
 - 核心术语体系：[[Terminology|核心术语与概念体系]]
 - 系统全景架构：[[Architecture|系统全景架构]]
 - 影子方法融合：[[Shadow-Method-Virtualization|影子方法虚拟化与融合规范]]
-- 模块化微包规范：[[Package-System|mcpack 模块化微包规范]]
+- 模块化微包规范：[[Package-System|graalpack 模块化微包规范]]
 - 实施路线与规划：[[Roadmap-and-Tracks|实施路线图与 Track 拆解]]

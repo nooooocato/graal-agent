@@ -1,4 +1,4 @@
-# PowerShell 7 Test Suite Runner for mc-agent
+# PowerShell 7 Test Suite Runner for graal-agent
 $ErrorActionPreference = "Stop"
 
 $jdkPath = "$env:USERPROFILE\Downloads\graalvm-jdk-25_windows-x64_bin\graalvm-jdk-25.0.4+7.1"
@@ -42,5 +42,5 @@ $runCp = "$outDir;$testOutDir;$libCp"
 if (Test-Path $brigadierJar) {
     $runCp = "$outDir;$testOutDir;$libCp;$brigadierJar"
 }
-& $java -ea "-Dfile.encoding=UTF-8" -cp $runCp com.mcagent.test.TestRunner @args
+& $java -ea "-Dfile.encoding=UTF-8" -cp $runCp com.graalagent.test.TestRunner @args
 exit $LASTEXITCODE

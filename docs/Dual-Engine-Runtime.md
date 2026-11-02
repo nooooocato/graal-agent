@@ -16,7 +16,7 @@ tags:
 - **纯动态语言（JavaScript / Python）：** 语法敏捷、交互性强，但面对高频 Tick（每秒 20 次处理成千上万个实体）、复杂的 3D 向量矩阵运算或字节码切片织入时，解释器开销与反射封包会导致明显的性能抖动（Lag Spike）。
 - **纯静态预编译语言（常规 Java）：** 性能极高（原生 JIT 编译），但开发流程痛苦——修改一行代码需要退出游戏、重新运行 Gradle 编译打包、重启客户端/服务端等待 2 分钟，严重打击迭代效率。
 
-`mc-agent` 的 **双引擎混编体系** 实现了二者的完美融合：
+`graal-agent` 的 **双引擎混编体系** 实现了二者的完美融合：
 
 | 引擎 | 语言与技术栈 | 职责分工 | 性能表现 | 热重载方式 |
 | :--- | :--- | :--- | :---: | :--- |
@@ -83,6 +83,6 @@ AgentAPI.getEventBus().emit("customMagicDamage", targetPlayer, finalDamage);
 ## 关联导航
 - 核心术语体系：[[Terminology|核心术语与概念体系]]
 - 系统全景架构：[[Architecture|系统全景架构]]
-- 模块化微包规范：[[Package-System|mcpack 模块化微包规范]]
+- 模块化微包规范：[[Package-System|graalpack 模块化微包规范]]
 - 影子方法融合：[[Shadow-Method-Virtualization|影子方法虚拟化与融合规范]]
 - 实施路线与规划：[[Roadmap-and-Tracks|实施路线图与 Track 拆解]]

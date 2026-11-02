@@ -10,8 +10,8 @@ $srcDir = Join-Path $agentDir "src"
 $libDir = Join-Path $agentDir "lib"
 $outDir = Join-Path $agentDir "out"
 $manifestFile = Join-Path $agentDir "MANIFEST.MF"
-$targetJar = Join-Path $agentDir "mc-agent.jar"
-$tempJar = Join-Path $agentDir "mc-agent.jar.new"
+$targetJar = Join-Path $agentDir "graal-agent.jar"
+$tempJar = Join-Path $agentDir "graal-agent.jar.new"
 
 if (-not (Test-Path $javac)) {
     Write-Error "JDK compiler not found at: $javac"
@@ -38,6 +38,6 @@ try {
     Write-Host ">>> Build successful! Target: $targetJar" -ForegroundColor Green
     Get-Item $targetJar | Select-Object Name, Length, LastWriteTime
 } catch {
-    Write-Warning "mc-agent.jar is currently locked by a running Minecraft instance."
+    Write-Warning "graal-agent.jar is currently locked by a running Minecraft instance."
     Write-Host ">>> Generated $tempJar successfully. Please exit Minecraft and re-run build.ps1 to apply." -ForegroundColor Yellow
 }

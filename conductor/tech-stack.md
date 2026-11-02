@@ -1,4 +1,4 @@
-# Technology Stack: Minecraft 26.3 JavaScript Agent (`mc-agent`)
+# Technology Stack: Minecraft 26.3 JavaScript Agent (`graal-agent`)
 
 ## 1. Core Runtime & Language
 - **Language / Version:** Java 25
@@ -31,4 +31,4 @@
 ## 5. Build & Development Tools
 - **Build Script:** PowerShell 7 (`build.ps1`).
 - **Compilation Toolchain:** `javac` (UTF-8 encoded) + `jar` manifest packaging.
-- **Output Artifact:** `mc-agent.jar` (single agent JAR containing manifest and core classes).
+- **Output Artifact:** `graal-agent.jar` (single agent JAR containing manifest and core classes).

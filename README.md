@@ -1,4 +1,4 @@
-# Minecraft 26.3 JavaScript Agent (mc-agent)
+# Minecraft 26.3 JavaScript Agent (graal-agent)
 
 为 Minecraft 26.3（无混淆 / Mojang 映射版本）打造的现代化 Java Agent。基于 **Oracle GraalVM JDK 25** 的 **Polyglot JavaScript (GraalJS)** 引擎与 Java 25 原生 **Class-File API**，实现原生 JS 脚本交互、事件监听、热重载与标准原版指令管道集成。
 
@@ -27,7 +27,7 @@
 ## 📁 目录结构
 
 ```text
-H:\mc-mod\mc-agent\
+H:\mc-mod\graal-agent\
 ├── lib\                       # GraalJS 25.0.4 运行时依赖（自动注入 Classpath）
 ├── scripts\                   # JavaScript 脚本目录（支持热重载）
 │   ├── 00_init.js             # 启动问候与初始化
@@ -36,7 +36,7 @@ H:\mc-mod\mc-agent\
 │   ├── 03_chat_commands.js    # 标准原版指令与自定义指令演示
 │   └── 04_bytecode_hook_demo.js # 动态字节码拦截演示
 ├── src\                       # Agent Java 源码
-│   └── com\mcagent\
+│   └── com\graalagent\
 │       ├── AgentMain.java             # Agent 入口 (premain / agentmain)
 │       ├── bridge\AgentBridge.java    # 字节码回调、主线程调度与反射桥接
 │       ├── transformer\MinecraftTransformer.java # Java 25 ClassFile 插桩器
@@ -45,7 +45,7 @@ H:\mc-mod\mc-agent\
 │       ├── script\AgentAPI.java       # 注入 JS 的 agent 全局 API
 │       └── util\Logger.java          # UTF-8 格式化文件与 Log4j 日志
 ├── build.ps1                  # PowerShell 7 一键编译构建脚本
-├── mc-agent.jar               # 已编译打包的 Java Agent
+├── graal-agent.jar               # 已编译打包的 Java Agent
 └── README.md                  # 本文档
 ```
 
@@ -97,7 +97,7 @@ agent.registerCommand("myfly", (args) => {
 1. **保存并退出当前 Minecraft**。
 2. 在 PowerShell 7 中运行一键编译：
    ```powershell
-   cd H:\mc-mod\mc-agent
+   cd H:\mc-mod\graal-agent
    .\build.ps1
    ```
 3. 重新在 HMCL 中启动游戏即可享用最新版！

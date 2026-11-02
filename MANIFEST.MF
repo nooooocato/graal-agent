@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Premain-Class: com.mcagent.AgentMain
-Agent-Class: com.mcagent.AgentMain
+Premain-Class: com.graalagent.AgentMain
+Agent-Class: com.graalagent.AgentMain
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true
 Can-Set-Native-Method-Prefix: true

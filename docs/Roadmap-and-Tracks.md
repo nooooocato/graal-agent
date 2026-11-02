@@ -41,12 +41,12 @@ flowchart TD
 ### 🔹 Track 1: `modular_package_system` (微包基础架构与 DAG 拓扑解析)
 - **目标：** 建立微包目录标准与包管理器内核。
 - **核心任务：**
-  1. 制定并实现 `mcpack.json` 解析器与 JSON Schema 校验。
+  1. 制定并实现 `graalpack.json` 解析器与 JSON Schema 校验。
   2. 实现 `packages/` 目录扫描与本地微包元数据索引。
   3. 实现基于 Kahn 算法的 DAG 依赖拓扑排序，能够检测环形依赖并报错。
   4. 实现基础生命周期接口（`load`, `enable`, `disable`）。
 - **交付验收：** 针对各种依赖图结构（线性、菱形、循环依赖、前置缺失）的 100% 单元测试。
-- **关联规范：** [[Package-System|mcpack 模块化微包规范]]
+- **关联规范：** [[Package-System|graalpack 模块化微包规范]]
 
 ---
 
@@ -89,7 +89,7 @@ flowchart TD
 - **目标：** 打造如同 `npm` 一般丝滑的 Minecraft 包管理体验。
 - **核心任务：**
   1. 实现基于 HTTP/JSON 的 Modrinth / CurseForge / GitHub Releases 远程解析器。
-  2. 提供控制台与游戏内指令：`/mcpack install <id>`、`/mcpack update`、`/mcpack remove`。
+  2. 提供控制台与游戏内指令：`/graalpack install <id>`、`/graalpack update`、`/graalpack remove`。
   3. 实现哈希校验（SHA-256）与自动化依赖包解压归档。
 - **交付验收：** 模拟网络请求测试包下载、依赖递归安装与热挂载。
 
@@ -99,7 +99,7 @@ flowchart TD
 - 回到首页：[[Index|文档首页]]
 - 核心术语体系：[[Terminology|核心术语与概念体系]]
 - 系统全景架构：[[Architecture|系统全景架构]]
-- 模块化微包规范：[[Package-System|mcpack 模块化微包规范]]
+- 模块化微包规范：[[Package-System|graalpack 模块化微包规范]]
 - 双引擎运行时规范：[[Dual-Engine-Runtime|双引擎运行时与动态编译]]
 - 影子方法融合：[[Shadow-Method-Virtualization|影子方法虚拟化与融合规范]]
 - 多 Loader 协调：[[Multi-Loader-Compatibility|多 ModLoader 兼容与字节码协调]]

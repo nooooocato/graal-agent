@@ -1,7 +1,7 @@
-# Minecraft 26.3 JavaScript Agent & Lightweight Mod API (`mc-agent`)
+# Minecraft 26.3 JavaScript Agent & Lightweight Mod API (`graal-agent`)
 
 ## Vision & Purpose
-`mc-agent` is a high-performance, developer-friendly Java Agent and lightweight Mod API for Minecraft 26.3 (Mojang mappings). Powered by Oracle GraalVM JDK 25 and GraalJS (Polyglot Truffle), it provides a minimal, high-efficiency API and underlying bytecode bridge that transforms JavaScript scripts into mod-grade extensions without the weight or lock-in of heavy traditional modding loaders.
+`graal-agent` is a high-performance, developer-friendly Java Agent and lightweight Mod API for Minecraft 26.3 (Mojang mappings). Powered by Oracle GraalVM JDK 25 and GraalJS (Polyglot Truffle), it provides a minimal, high-efficiency API and underlying bytecode bridge that transforms JavaScript scripts into mod-grade extensions without the weight or lock-in of heavy traditional modding loaders.
 
 ## Core Architectural Pillars
 1. **Dual-Environment Architecture (Client & Dedicated Server):**

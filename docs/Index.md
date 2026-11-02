@@ -1,5 +1,5 @@
 ---
-title: mc-agent 架构与工程 Wiki 知识库
+title: graal-agent 架构与工程 Wiki 知识库
 date: 2026-11-02
 tags:
   - "#/index"
@@ -7,9 +7,9 @@ tags:
   - "#/overview"
 ---
 
-# `mc-agent` 架构与工程 Wiki 知识库
+# `graal-agent` 架构与工程 Wiki 知识库
 
-欢迎查阅 `mc-agent`（Minecraft 26.3 Universal Meta-Loader & 双引擎运行时底座）的官方技术规范与架构 Wiki。
+欢迎查阅 `graal-agent`（Minecraft 26.3 Universal Meta-Loader & 双引擎运行时底座）的官方技术规范与架构 Wiki。
 
 本项目采用 **Wiki Flavored Markdown** 编写，所有概念、规范与模块均通过 `[[Wikilinks]]` 深度互联，支持在 Obsidian 中以网状知识图谱形式检阅，亦便于在命令行和各类 AI Agent 协作流中高效导航与持续维护。
 
@@ -26,7 +26,7 @@ tags:
                                       │
        ┌──────────────────────────────┼──────────────────────────────┐
        ▼                              ▼                              ▼
-[[Shadow-Method-Virtualization|影子方法虚拟化规范]]  [[Package-System|mcpack 模块化微包规范]]  [[Dual-Engine-Runtime|双引擎与动态编译规范]]
+[[Shadow-Method-Virtualization|影子方法虚拟化规范]]  [[Package-System|graalpack 模块化微包规范]]  [[Dual-Engine-Runtime|双引擎与动态编译规范]]
                                       │
                                       ▼
                    [[Multi-Loader-Compatibility|多 Loader 兼容与字节码协调]]
@@ -45,8 +45,8 @@ tags:
 ### 2. 关键技术规范
 - **[[Shadow-Method-Virtualization|影子方法虚拟化与融合规范 (Shadow Method Virtualization)]]**
   解决多 Loader（Fabric / NeoForge）在单一堆内存对象上同时修改方法的“圣杯级”方案，定义了 Master Pipeline Router 与非崩溃式优雅仲裁。
-- **[[Package-System|mcpack 模块化微包规范与包管理器 (Package System Specification)]]**
-  规范了 `packages/<id>/` 目录标准、`mcpack.json` Schema、依赖 DAG 拓扑排序算法与两阶段演进。
+- **[[Package-System|graalpack 模块化微包规范与包管理器 (Package System Specification)]]**
+  规范了 `packages/<id>/` 目录标准、`graalpack.json` Schema、依赖 DAG 拓扑排序算法与两阶段演进。
 - **[[Dual-Engine-Runtime|双引擎运行时与动态编译规范 (Dual-Engine Runtime & In-Memory Compiler)]]**
   基于 Java 25 原生 `javax.tools.JavaCompiler` 实现的内存编译管道、毫秒级响应、PackageClassLoader 垃圾回收机制与 GraalJS 双向互通。
 - **[[Multi-Loader-Compatibility|多 ModLoader 兼容与字节码协调 (Multi-Loader Compatibility & Weaving)]]**

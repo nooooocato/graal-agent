@@ -9,7 +9,7 @@ tags:
 
 # 核心术语与概念体系 (Terminology & Concepts)
 
-本文档定义了 `mc-agent` 项目在向 **Universal Meta-Loader（全能元加载器）** 与 **双引擎混编系统** 演进过程中的核心概念、专有术语和物理模型。
+本文档定义了 `graal-agent` 项目在向 **Universal Meta-Loader（全能元加载器）** 与 **双引擎混编系统** 演进过程中的核心概念、专有术语和物理模型。
 
 ---
 
@@ -50,9 +50,9 @@ Java 提供的底层机制（`java.lang.instrument`）。允许 Agent 在任何�
 
 ## 3. 模块化包管理术语
 
-### mcpack (模块化微包)
-项目的原子分发单元。每个微包是一个自包含的独立目录（或归档），包含 `mcpack.json` 清单文件，能够同时封装 Java 源码、JS 脚本、数据包、资源包，并声明对外部 Fabric/NeoForge 模组的依赖。
-参见：[[Package-System|mcpack 模块化微包规范]]
+### graalpack (模块化微包)
+项目的原子分发单元。每个微包是一个自包含的独立目录（或归档），包含 `graalpack.json` 清单文件，能够同时封装 Java 源码、JS 脚本、数据包、资源包，并声明对外部 Fabric/NeoForge 模组的依赖。
+参见：[[Package-System|graalpack 模块化微包规范]]
 
 ### Dependency DAG (依赖有向无环图)
 包管理器在加载微包前构建的拓扑依赖关系图。用于检测循环依赖（Circular Dependency）、解析包加载优先级，并在启动时验证所需外部 ModLoader 与环境前置是否就绪。

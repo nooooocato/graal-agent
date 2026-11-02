@@ -1,6 +1,8 @@
 out/
 test-out/
 agent.log
+graal-agent.jar
+graal-agent.jar.new
 mc-agent.jar
 mc-agent.jar.new
 *.class
