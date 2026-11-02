@@ -100,7 +100,9 @@ public class AgentBridge {
     }
 
     public static void onRegisterServerCommands(Object dispatcher) {
-        if (dispatcher == null) return;
+        if (dispatcher == null) {
+            return;
+        }
         com.mcagent.server.ServerCommandDispatcher.registerServerCommands(dispatcher);
     }
 
