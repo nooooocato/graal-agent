@@ -2,9 +2,6 @@
 
 ---
 
-- [x] **Track: 第二阶段：影子方法虚拟化网格与插桩解耦 (SMV Bytecode Mesh & Plugin Pipeline)**
-  *Link: [./tracks/phase2_smv_bytecode_mesh_20261103/index.md](./tracks/phase2_smv_bytecode_mesh_20261103/index.md)*
-
 - [ ] **Track: 第三阶段：核心并发、看门狗防卡死与事务缓冲 (Concurrency, Watchdog & Transaction Buffer)**
   *Link: [./tracks/phase3_concurrency_watchdog_20261103/index.md](./tracks/phase3_concurrency_watchdog_20261103/index.md)*
 
