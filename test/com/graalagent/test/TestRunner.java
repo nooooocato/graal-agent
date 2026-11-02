@@ -35,6 +35,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.bridge.brigadier.BrigadierAdapterTest");
             addTestClassIfExists(testClasses, "com.graalagent.bootstrap.BootstrapTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.smv.MethodVirtualizerTest");
+            addTestClassIfExists(testClasses, "com.graalagent.transformer.SMVOrchestratorTest");
         }
 
         int total = 0;
