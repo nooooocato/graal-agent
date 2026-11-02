@@ -15,7 +15,7 @@
 - [x] Task: 编写 ClassTransformPlugin 与 SMVOrchestrator 单元测试 (Red Phase) (b3f4cc9)
     - [ ] 编写插件基于类名精准路由测试
     - [ ] 编写多插件管道连续转换测试
-- [ ] Task: 实现 SMVOrchestrator 与插件注册表 (Green Phase)
+- [x] Task: 实现 SMVOrchestrator 与插件注册表 (Green Phase) (c1073ec)
     - [ ] 创建 `com.graalagent.transformer.ClassTransformPlugin` 接口
     - [ ] 创建 `com.graalagent.transformer.SMVOrchestrator`
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
