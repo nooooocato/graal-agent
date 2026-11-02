@@ -85,10 +85,7 @@ public class ServerCommandDispatcher {
             // 3. Register custom script commands
             ScriptManager sm = ScriptManager.getInstance();
             if (sm != null) {
-                for (Map.Entry<String, Value> entry : sm.getCustomCommands().entrySet()) {
-                    String cmdName = entry.getKey();
-                    Value callback = entry.getValue();
-
+                for (String cmdName : sm.getCustomCommands().keySet()) {
                     Object customLiteral = literalMethod.invoke(null, cmdName);
                     requiresMethod.invoke(customLiteral, permPredicate);
 
@@ -100,11 +97,12 @@ public class ServerCommandDispatcher {
                             new Class<?>[]{commandClass},
                             (proxy, method, args) -> {
                                 if ("run".equals(method.getName()) && args.length == 1) {
-                                    return handleCustomExecution(args[0], callback);
+                                    return handleCustomExecution(args[0], cmdName);
                                 }
                                 return 0;
                             }
                     );
+                    executesLiteral.invoke(customLiteral, customCommand);
                     executesRequired.invoke(customArgNode, customCommand);
                     thenMethod.invoke(customLiteral, customArgNode);
                     registerMethod.invoke(dispatcher, customLiteral);
@@ -193,13 +191,16 @@ public class ServerCommandDispatcher {
         }
     }
 
-    private static int handleCustomExecution(Object context, Value callback) {
+    private static int handleCustomExecution(Object context, String cmdName) {
         try {
             Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
             String argsStr = "";
             try {
                 argsStr = (String) getArgument.invoke(context, "args", String.class);
             } catch (Throwable ignored) {}
+
+            ScriptManager sm = ScriptManager.getInstance();
+            Value callback = sm != null ? sm.getCustomCommands().get(cmdName) : null;
 
             if (callback != null && callback.canExecute()) {
                 callback.execute(argsStr);

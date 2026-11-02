@@ -83,7 +83,11 @@ public class EnvironmentContext {
 
         if (serverInstance != null) {
             try {
-                Class<?> compClass = Class.forName("net.minecraft.network.chat.Component");
+                ClassLoader cl = serverInstance.getClass().getClassLoader();
+                if (cl == null) {
+                    cl = ClassLoader.getSystemClassLoader();
+                }
+                Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
                 Method literalMethod = compClass.getMethod("literal", String.class);
                 Object comp = literalMethod.invoke(null, message);
 
