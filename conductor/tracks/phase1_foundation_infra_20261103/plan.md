@@ -14,9 +14,9 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 反射句柄高速缓存池 (MethodHandleCache)
-- [ ] Task: 编写 MethodHandleCache 单元测试 (Red Phase)
-    - [ ] 编写针对类方法动态预解析与缓存命中率测试
-    - [ ] 编写基于句柄的 invokeExact 调用性能测试
+- [x] Task: 编写 MethodHandleCache 单元测试 (Red Phase) 4ffe3f9
+    - [x] 编写针对类方法动态预解析与缓存命中率测试
+    - [x] 编写基于句柄的 invokeExact 调用性能测试
 - [ ] Task: 实现 MethodHandleCache 与预热逻辑 (Green Phase)
     - [ ] 创建 `com.graalagent.bridge.MethodHandleCache`
     - [ ] 建立针对 `Component.literal`、`isSameThread`、`execute` 的预热方法
