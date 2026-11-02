@@ -12,7 +12,7 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (8411874)
 
 ## Phase 2: 插件契约与调度器 (Pipeline Infrastructure)
-- [ ] Task: 编写 ClassTransformPlugin 与 SMVOrchestrator 单元测试 (Red Phase)
+- [x] Task: 编写 ClassTransformPlugin 与 SMVOrchestrator 单元测试 (Red Phase) (b3f4cc9)
     - [ ] 编写插件基于类名精准路由测试
     - [ ] 编写多插件管道连续转换测试
 - [ ] Task: 实现 SMVOrchestrator 与插件注册表 (Green Phase)
