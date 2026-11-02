@@ -1,6 +1,6 @@
 # Implementation Plan: Server Support & Scripts File I/O (`server_support_file_io`)
 
-## Phase 1: Sandboxed Scripts File I/O (`agent.fs`)
+## Phase 1: Sandboxed Scripts File I/O (`agent.fs`) [checkpoint: d237727]
 - [x] Task: Create Unit Tests for Sandboxed File System (`ScriptFileSystemTest`) [4891a19]
     - [x] Write unit tests verifying path traversal prevention (rejecting `../` escapes outside `scripts/`)
     - [x] Write unit tests verifying UTF-8 read/write, directory creation, exists checks, file listing, and deletion
@@ -8,7 +8,7 @@
     - [x] Implement `com.mcagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
     - [x] Expose `agent.fs` in `AgentAPI.java` with idiomatic JS methods
     - [x] Run automated tests and confirm passing (Green Phase)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [d237727]
 
 ## Phase 2: Dual-Environment Runtime Detection & Thread Dispatcher
 - [ ] Task: Create Tests for Dual-Environment Context & Dispatching
