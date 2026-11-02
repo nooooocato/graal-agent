@@ -1,9 +1,9 @@
 # Implementation Plan: Multiplayer Command Passthrough, Dynamic Suggestion Sync & Security Sandboxing (`multiplayer_command_passthrough`)
 
 ## Phase 1: 服务端控制台无参指令与生命周期修复
-- [ ] Task: 编写服务端指令无参执行与重载解耦单元测试 (Red Phase)
-    - [ ] 编写测试用例验证无参调用 `serverinfo`、`fstest` 的语法树解析
-    - [ ] 编写测试用例验证执行 `/reloadjs` 后再调用自定义指令不报上下文已关闭
+- [x] Task: 编写服务端指令无参执行与重载解耦单元测试 (Red Phase) ba37cc4
+    - [x] 编写测试用例验证无参调用 `serverinfo`、`fstest` 的语法树解析
+    - [x] 编写测试用例验证执行 `/reloadjs` 后再调用自定义指令不报上下文已关闭
 - [ ] Task: 修复 ServerCommandDispatcher 指令注册与动态回调解析 (Green Phase)
     - [ ] 在 `customLiteral` 节点上增加 `executesLiteral.invoke(customLiteral, customCommand)` 支持无参调用
     - [ ] 改造 `handleCustomExecution` 为执行时动态获取 `ScriptManager.getInstance().getCustomCommands().get(cmdName)`
