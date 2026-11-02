@@ -6,6 +6,7 @@ import com.graalagent.util.Logger;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /**
@@ -21,8 +22,8 @@ public class BrigadierAdapter {
     public static class NodeBuilder {
         private final String name;
         private Predicate<Object> permissionPredicate;
-        private BiConsumer<Object, String> executionCallback;
-        private BiConsumer<Object, String> greedyCallback;
+        private BiFunction<Object, String, Integer> executionCallback;
+        private BiFunction<Object, String, Integer> greedyCallback;
         private String greedyArgName = "args";
 
         public NodeBuilder(String name) {
@@ -36,11 +37,28 @@ public class BrigadierAdapter {
 
         public NodeBuilder thenGreedy(String argName, BiConsumer<Object, String> callback) {
             this.greedyArgName = argName;
+            this.greedyCallback = (source, arg) -> {
+                callback.accept(source, arg);
+                return 1;
+            };
+            return this;
+        }
+
+        public NodeBuilder thenGreedyWithResult(String argName, BiFunction<Object, String, Integer> callback) {
+            this.greedyArgName = argName;
             this.greedyCallback = callback;
             return this;
         }
 
         public NodeBuilder executes(BiConsumer<Object, String> callback) {
+            this.executionCallback = (source, arg) -> {
+                callback.accept(source, arg);
+                return 1;
+            };
+            return this;
+        }
+
+        public NodeBuilder executesWithResult(BiFunction<Object, String, Integer> callback) {
             this.executionCallback = callback;
             return this;
         }
@@ -83,8 +101,8 @@ public class BrigadierAdapter {
                                     Object ctx = args[0];
                                     Method getSource = ctx.getClass().getMethod("getSource");
                                     Object source = getSource.invoke(ctx);
-                                    executionCallback.accept(source, null);
-                                    return 1;
+                                    Integer res = executionCallback.apply(source, null);
+                                    return res != null ? res : 1;
                                 }
                                 return 0;
                             }
@@ -112,8 +130,8 @@ public class BrigadierAdapter {
                                     Object source = getSource.invoke(ctx);
                                     Method getArgument = ctx.getClass().getMethod("getArgument", String.class, Class.class);
                                     String argVal = (String) getArgument.invoke(ctx, greedyArgName, String.class);
-                                    greedyCallback.accept(source, argVal);
-                                    return 1;
+                                    Integer res = greedyCallback.apply(source, argVal);
+                                    return res != null ? res : 1;
                                 }
                                 return 0;
                             }
@@ -144,20 +162,30 @@ public class BrigadierAdapter {
             Object commands = MethodHandleCache.findVirtualByName(server.getClass(), "getCommands").invoke(server);
             if (commands == null) return;
 
+            Method sendCommandsMethod = null;
+            for (Method m : commands.getClass().getMethods()) {
+                if ("sendCommands".equals(m.getName()) && m.getParameterCount() == 1) {
+                    sendCommandsMethod = m;
+                    break;
+                }
+            }
+            if (sendCommandsMethod == null) return;
+            java.lang.invoke.MethodHandle sendCommandsMh = java.lang.invoke.MethodHandles.publicLookup().unreflect(sendCommandsMethod);
+
             int count = 0;
             for (Object player : players) {
                 try {
-                    MethodHandleCache.findVirtualByName(commands.getClass(), "sendCommands", player.getClass()).invoke(commands, player);
+                    sendCommandsMh.invoke(commands, player);
                     count++;
                 } catch (Throwable t) {
                     Logger.warn("Failed to push commands to player " + player + ": " + t.getMessage());
                 }
             }
             if (count > 0) {
-                Logger.info("BrigadierAdapter: Pushed updated Brigadier command tree to " + count + " connected player(s).");
+                Logger.info("Pushed updated Brigadier command tree to " + count + " connected player(s).");
             }
         } catch (Throwable t) {
-            Logger.warn("BrigadierAdapter: Could not push command updates to players: " + t.getMessage());
+            Logger.warn("Could not push command updates to players: " + t.getMessage());
         }
     }
 }

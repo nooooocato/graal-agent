@@ -1,5 +1,6 @@
 package com.graalagent.server;
 
+import com.graalagent.bridge.brigadier.BrigadierAdapter;
 import com.graalagent.script.ScriptManager;
 import com.graalagent.util.Logger;
 import org.graalvm.polyglot.Value;
@@ -19,93 +20,31 @@ public class ServerCommandDispatcher {
         }
 
         try {
-            ClassLoader cl = dispatcher.getClass().getClassLoader();
-            if (cl == null) {
-                cl = ClassLoader.getSystemClassLoader();
-            }
-
-            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder", true, cl);
-            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType", true, cl);
-            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder", true, cl);
-            Class<?> commandClass = Class.forName("com.mojang.brigadier.Command", true, cl);
-            Class<?> argumentTypeClass = Class.forName("com.mojang.brigadier.arguments.ArgumentType", true, cl);
-            Class<?> argumentBuilderClass = Class.forName("com.mojang.brigadier.builder.ArgumentBuilder", true, cl);
-
-            Method literalMethod = literalBuilderClass.getMethod("literal", String.class);
-            Method greedyStringMethod = argumentsClass.getMethod("greedyString");
-            Method argumentMethod = requiredBuilderClass.getMethod("argument", String.class, argumentTypeClass);
-            Method thenMethod = literalBuilderClass.getMethod("then", argumentBuilderClass);
-            Method requiresMethod = literalBuilderClass.getMethod("requires", Predicate.class);
-            Method executesRequired = requiredBuilderClass.getMethod("executes", commandClass);
-            Method executesLiteral = literalBuilderClass.getMethod("executes", commandClass);
-            Method registerMethod = dispatcher.getClass().getMethod("register", literalBuilderClass);
-
             Predicate<Object> permPredicate = ServerCommandDispatcher::checkPermission;
 
             // 1. Build /js <code...>
-            Object jsLiteral = literalMethod.invoke(null, "js");
-            requiresMethod.invoke(jsLiteral, permPredicate);
-
-            Object greedyArg = greedyStringMethod.invoke(null);
-            Object codeArg = argumentMethod.invoke(null, "code", greedyArg);
-
-            Object jsCommand = Proxy.newProxyInstance(
-                    cl,
-                    new Class<?>[]{commandClass},
-                    (proxy, method, args) -> {
-                        if ("run".equals(method.getName()) && args.length == 1) {
-                            return handleJsExecution(args[0]);
-                        }
-                        return 0;
-                    }
-            );
-            executesRequired.invoke(codeArg, jsCommand);
-            thenMethod.invoke(jsLiteral, codeArg);
-            registerMethod.invoke(dispatcher, jsLiteral);
+            BrigadierAdapter.literal("js")
+                    .requires(permPredicate)
+                    .thenGreedyWithResult("code", (source, code) -> handleJs(source, code))
+                    .registerTo(dispatcher);
 
             // 2. Build /reloadjs and /jsreload
-            Object reloadCommand = Proxy.newProxyInstance(
-                    cl,
-                    new Class<?>[]{commandClass},
-                    (proxy, method, args) -> {
-                        if ("run".equals(method.getName()) && args.length == 1) {
-                            return handleReloadExecution(args[0]);
-                        }
-                        return 0;
-                    }
-            );
-
             for (String alias : new String[]{"reloadjs", "jsreload"}) {
-                Object reloadLiteral = literalMethod.invoke(null, alias);
-                requiresMethod.invoke(reloadLiteral, permPredicate);
-                executesLiteral.invoke(reloadLiteral, reloadCommand);
-                registerMethod.invoke(dispatcher, reloadLiteral);
+                BrigadierAdapter.literal(alias)
+                        .requires(permPredicate)
+                        .executesWithResult((source, args) -> handleReload(source))
+                        .registerTo(dispatcher);
             }
 
             // 3. Register custom script commands
             ScriptManager sm = ScriptManager.getInstance();
             if (sm != null) {
                 for (String cmdName : sm.getCustomCommands().keySet()) {
-                    Object customLiteral = literalMethod.invoke(null, cmdName);
-                    requiresMethod.invoke(customLiteral, permPredicate);
-
-                    Object customGreedyArg = greedyStringMethod.invoke(null);
-                    Object customArgNode = argumentMethod.invoke(null, "args", customGreedyArg);
-
-                    Object customCommand = Proxy.newProxyInstance(
-                            cl,
-                            new Class<?>[]{commandClass},
-                            (proxy, method, args) -> {
-                                if ("run".equals(method.getName()) && args.length == 1) {
-                                    return handleCustomExecution(args[0], cmdName);
-                                }
-                                return 0;
-                            }
-                    );
-                    executesLiteral.invoke(customLiteral, customCommand);
-                    executesRequired.invoke(customArgNode, customCommand);
-                    thenMethod.invoke(customLiteral, customArgNode);
-                    registerMethod.invoke(dispatcher, customLiteral);
+                    BrigadierAdapter.literal(cmdName)
+                            .requires(permPredicate)
+                            .executesWithResult((source, args) -> handleCustom(source, cmdName, ""))
+                            .thenGreedyWithResult("args", (source, args) -> handleCustom(source, cmdName, args))
+                            .registerTo(dispatcher);
                 }
             }
 
@@ -116,56 +55,7 @@ public class ServerCommandDispatcher {
     }
 
     public static void syncCommandsToPlayers(Object server) {
-        if (server == null) {
-            return;
-        }
-
-        try {
-            Method getPlayerList = server.getClass().getMethod("getPlayerList");
-            Object playerList = getPlayerList.invoke(server);
-            if (playerList == null) {
-                return;
-            }
-
-            Method getPlayers = playerList.getClass().getMethod("getPlayers");
-            Object playersObj = getPlayers.invoke(playerList);
-            if (!(playersObj instanceof Iterable<?> players)) {
-                return;
-            }
-
-            Method getCommands = server.getClass().getMethod("getCommands");
-            Object commands = getCommands.invoke(server);
-            if (commands == null) {
-                return;
-            }
-
-            Method sendCommandsMethod = null;
-            for (Method m : commands.getClass().getMethods()) {
-                if ("sendCommands".equals(m.getName()) && m.getParameterCount() == 1) {
-                    sendCommandsMethod = m;
-                    break;
-                }
-            }
-
-            if (sendCommandsMethod == null) {
-                return;
-            }
-
-            int count = 0;
-            for (Object player : players) {
-                try {
-                    sendCommandsMethod.invoke(commands, player);
-                    count++;
-                } catch (Throwable t) {
-                    Logger.error("Failed to sync commands to player: " + player, t);
-                }
-            }
-            if (count > 0) {
-                Logger.info("Pushed updated Brigadier command tree to " + count + " connected player(s).");
-            }
-        } catch (Throwable t) {
-            Logger.warn("Could not push command updates to players: " + t.getMessage());
-        }
+        BrigadierAdapter.syncCommandsToAll(server);
     }
 
     public static boolean checkPermission(Object source) {
@@ -207,36 +97,26 @@ public class ServerCommandDispatcher {
         }
     }
 
-    private static int handleJsExecution(Object context) {
-        Method getSource = null;
-        Object source = null;
-        try {
-            getSource = context.getClass().getMethod("getSource");
-            source = getSource.invoke(context);
-        } catch (Throwable ignored) {}
+    public static int handleJs(Object source, String code) {
+        Object player = null;
+        boolean isConsole = true;
+        if (source != null) {
+            try {
+                Method getPlayer = source.getClass().getMethod("getPlayer");
+                player = getPlayer.invoke(source);
+                if (player != null) {
+                    isConsole = false;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        ScriptManager sm = ScriptManager.getInstance();
+        if (sm == null) {
+            sendFeedback(source, "§c[JS 错误] ScriptManager 未初始化", false);
+            return 0;
+        }
 
         try {
-            Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
-            String code = (String) getArgument.invoke(context, "code", String.class);
-
-            Object player = null;
-            boolean isConsole = true;
-            if (source != null) {
-                try {
-                    Method getPlayer = source.getClass().getMethod("getPlayer");
-                    player = getPlayer.invoke(source);
-                    if (player != null) {
-                        isConsole = false;
-                    }
-                } catch (Throwable ignored) {}
-            }
-
-            ScriptManager sm = ScriptManager.getInstance();
-            if (sm == null) {
-                sendFeedback(source, "§c[JS 错误] ScriptManager 未初始化", false);
-                return 0;
-            }
-
             Object result;
             if (isConsole) {
                 result = sm.evalInline(code);
@@ -258,7 +138,7 @@ public class ServerCommandDispatcher {
         }
     }
 
-    private static int handleReloadExecution(Object context) {
+    public static int handleReload(Object source) {
         try {
             ScriptManager sm = ScriptManager.getInstance();
             if (sm != null) {
@@ -271,53 +151,82 @@ public class ServerCommandDispatcher {
         }
     }
 
-    private static int handleCustomExecution(Object context, String cmdName) {
-        Method getSource = null;
+    public static int handleCustom(Object source, String cmdName, String argsStr) {
+        if (argsStr == null) {
+            argsStr = "";
+        }
+        Object player = null;
+        boolean isConsole = true;
+        if (source != null) {
+            try {
+                Method getPlayer = source.getClass().getMethod("getPlayer");
+                player = getPlayer.invoke(source);
+                if (player != null) {
+                    isConsole = false;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        ScriptManager sm = ScriptManager.getInstance();
+        Value callback = sm != null ? sm.getCustomCommands().get(cmdName) : null;
+
+        if (callback != null && callback.canExecute()) {
+            try {
+                ScriptManager.setCommandExecutionContext(player, isConsole);
+                callback.execute(argsStr, player, source);
+            } catch (Throwable t) {
+                String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
+                Logger.error("指令 /" + cmdName + " 执行报错: " + errorMsg, t);
+                sendFeedback(source, "§c[指令报错] /" + cmdName + ": " + errorMsg, false);
+                return 0;
+            } finally {
+                ScriptManager.clearCommandExecutionContext();
+            }
+        } else {
+            sendFeedback(source, "§c[指令错误] 未找到指令 /" + cmdName + " 的回调函数！", false);
+        }
+        return 1;
+    }
+
+    public static int handleJsExecution(Object context) {
         Object source = null;
         try {
-            getSource = context.getClass().getMethod("getSource");
+            Method getSource = context.getClass().getMethod("getSource");
             source = getSource.invoke(context);
         } catch (Throwable ignored) {}
 
         try {
             Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
-            String argsStr = "";
-            try {
-                argsStr = (String) getArgument.invoke(context, "args", String.class);
-            } catch (Throwable ignored) {}
-
-            Object player = null;
-            boolean isConsole = true;
-            if (source != null) {
-                try {
-                    Method getPlayer = source.getClass().getMethod("getPlayer");
-                    player = getPlayer.invoke(source);
-                    if (player != null) {
-                        isConsole = false;
-                    }
-                } catch (Throwable ignored) {}
-            }
-
-            ScriptManager sm = ScriptManager.getInstance();
-            Value callback = sm != null ? sm.getCustomCommands().get(cmdName) : null;
-
-            if (callback != null && callback.canExecute()) {
-                try {
-                    ScriptManager.setCommandExecutionContext(player, isConsole);
-                    callback.execute(argsStr, player, source);
-                } finally {
-                    ScriptManager.clearCommandExecutionContext();
-                }
-            } else {
-                sendFeedback(source, "§c[指令错误] 未找到指令 /" + cmdName + " 的回调函数！", false);
-            }
-            return 1;
+            String code = (String) getArgument.invoke(context, "code", String.class);
+            return handleJs(source, code);
         } catch (Throwable t) {
-            String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
-            Logger.error("指令 /" + cmdName + " 执行报错: " + errorMsg, t);
-            sendFeedback(source, "§c[指令报错] /" + cmdName + ": " + errorMsg, false);
-            return 0;
+            return handleJs(source, "");
         }
+    }
+
+    public static int handleReloadExecution(Object context) {
+        Object source = null;
+        try {
+            Method getSource = context.getClass().getMethod("getSource");
+            source = getSource.invoke(context);
+        } catch (Throwable ignored) {}
+        return handleReload(source);
+    }
+
+    public static int handleCustomExecution(Object context, String cmdName) {
+        Object source = null;
+        try {
+            Method getSource = context.getClass().getMethod("getSource");
+            source = getSource.invoke(context);
+        } catch (Throwable ignored) {}
+
+        String argsStr = "";
+        try {
+            Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
+            argsStr = (String) getArgument.invoke(context, "args", String.class);
+        } catch (Throwable ignored) {}
+
+        return handleCustom(source, cmdName, argsStr);
     }
 
     private static void sendFeedback(Object source, String message, boolean broadcastToOps) {

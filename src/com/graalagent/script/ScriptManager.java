@@ -1,6 +1,7 @@
 package com.graalagent.script;
 
 import com.graalagent.bridge.AgentBridge;
+import com.graalagent.bridge.brigadier.BrigadierAdapter;
 import com.graalagent.util.Logger;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
@@ -407,42 +408,10 @@ public class ScriptManager {
     }
 
     private void registerCommandToBrigadier(Object dispatcher, String cmdName) {
-        try {
-            ClassLoader cl = dispatcher.getClass().getClassLoader();
-            if (cl == null) {
-                cl = ClassLoader.getSystemClassLoader();
-            }
-
-            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder", true, cl);
-            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType", true, cl);
-            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder", true, cl);
-            Class<?> commandClass = Class.forName("com.mojang.brigadier.Command", true, cl);
-            Class<?> argumentTypeClass = Class.forName("com.mojang.brigadier.arguments.ArgumentType", true, cl);
-            Class<?> argumentBuilderClass = Class.forName("com.mojang.brigadier.builder.ArgumentBuilder", true, cl);
-
-            Method literalMethod = literalBuilderClass.getMethod("literal", String.class);
-            Method greedyStringMethod = argumentsClass.getMethod("greedyString");
-            Method argumentMethod = requiredBuilderClass.getMethod("argument", String.class, argumentTypeClass);
-            Method thenMethod = literalBuilderClass.getMethod("then", argumentBuilderClass);
-            Method executesRequired = requiredBuilderClass.getMethod("executes", commandClass);
-            Method registerMethod = dispatcher.getClass().getMethod("register", literalBuilderClass);
-
-            Object literal = literalMethod.invoke(null, cmdName);
-            Object greedyArg = greedyStringMethod.invoke(null);
-            Object codeArg = argumentMethod.invoke(null, "args", greedyArg);
-
-            Object dummyCommand = java.lang.reflect.Proxy.newProxyInstance(
-                    cl,
-                    new Class<?>[]{commandClass},
-                    (proxy, method, args) -> 1
-            );
-
-            executesRequired.invoke(codeArg, dummyCommand);
-            thenMethod.invoke(literal, codeArg);
-            registerMethod.invoke(dispatcher, literal);
-        } catch (Throwable t) {
-            Logger.error("Failed to inject /" + cmdName + " into client dispatcher", t);
-        }
+        BrigadierAdapter.literal(cmdName)
+                .executes((source, args) -> {})
+                .thenGreedy("args", (source, args) -> {})
+                .registerTo(dispatcher);
     }
 
     private void startWatcher() {
