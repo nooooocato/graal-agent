@@ -135,6 +135,10 @@ public class AgentBridge {
         com.mcagent.server.ServerCommandDispatcher.registerServerCommands(dispatcher);
     }
 
+    public static java.util.concurrent.CompletableFuture<Void> onServerReloadResources(java.util.concurrent.CompletableFuture<Void> future) {
+        return future;
+    }
+
     public static void sendChatMessage(String message) {
         // Dedicated Server mode: broadcast directly to console and players
         if (cachedServer != null && cachedMinecraft == null) {

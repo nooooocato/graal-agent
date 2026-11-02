@@ -28,6 +28,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.mcagent.bridge.MultiplayerCommandPassthroughTest");
             addTestClassIfExists(testClasses, "com.mcagent.server.ServerCommandTest");
             addTestClassIfExists(testClasses, "com.mcagent.server.ServerSandboxingTest");
+            addTestClassIfExists(testClasses, "com.mcagent.server.ReloadHierarchyTest");
             addTestClassIfExists(testClasses, "com.mcagent.datapack.DatapackDiscoveryTest");
         }
 
