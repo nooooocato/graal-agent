@@ -24,10 +24,10 @@
 ## Phase 3: Server Brigadier Command Integration
 - [x] Task: Create Tests for Server Command Dispatcher [996ed07]
     - [x] Write tests verifying server command node registration for `/js` and `/reloadjs`
-- [ ] Task: Implement Bytecode Transformer for Server Commands
-    - [ ] Instrument `net.minecraft.commands.Commands` to register `/js`, `/reloadjs`, and dynamic commands
-    - [ ] Ensure permission level check (requires op / level 2+ on dedicated servers)
-    - [ ] Run automated tests and verify command execution
+- [x] Task: Implement Bytecode Transformer for Server Commands [a0899dd]
+    - [x] Instrument `net.minecraft.commands.Commands` to register `/js`, `/reloadjs`, and dynamic commands
+    - [x] Ensure permission level check (requires op / level 2+ on dedicated servers)
+    - [x] Run automated tests and verify command execution
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Dynamic Datapack Injection & Hot Reload
