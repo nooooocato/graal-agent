@@ -17,9 +17,9 @@
 - [x] Task: 实现客户端指令穿透与本地专属调试指令 (Green Phase) 792514c
     - [x] 在 `AgentBridge.isMultiplayer()` 中接入 `Minecraft.getInstance().isLocalServer()` 检测
     - [x] 改造 `ScriptManager.onSendCommand`：若处于多人模式，将指令穿透至服务端；仅拦截处理 `/cjs`
-- [ ] Task: 改造指令提示同步逻辑 (Green Phase)
-    - [ ] 调整 `ClientPacketListener.handleCommands`：多人模式下不注入本地指令，完全跟随服务端网络包
-    - [ ] 在服务端热重载或指令注册时，调用 `server.getPlayerList().getPlayers().forEach(p -> server.getCommands().sendCommands(p))` 动态推送更新
+- [x] Task: 改造指令提示同步逻辑 (Green Phase) c1513e7
+    - [x] 调整 `ClientPacketListener.handleCommands`：多人模式下不注入本地指令，完全跟随服务端网络包
+    - [x] 在服务端热重载或指令注册时，调用 `server.getPlayerList().getPlayers().forEach(p -> server.getCommands().sendCommands(p))` 动态推送更新
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 多人环境客户端穿透安全沙箱
