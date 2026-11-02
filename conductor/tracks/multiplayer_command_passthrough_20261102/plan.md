@@ -32,14 +32,14 @@
     - [x] 在 `ScriptManager` 中为玩家穿透执行提供受限环境（屏蔽 `Java` 全局对象，禁用写文件操作）
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 164e92c
 
-## Phase 4: 原版 /reload 与 /reloadjs 包含关系重构
+## Phase 4: 原版 /reload 与 /reloadjs 包含关系重构 [checkpoint: a9ee08f]
 - [x] Task: 编写重载层级关系单元测试 (Red Phase) bb67a1c
     - [x] 编写测试验证 `/reloadjs` 仅重载 JS，不重载数据包
     - [x] 编写测试验证原版 `reloadResources` 触发时自动联动重载 JS
 - [x] Task: 实现 MinecraftServer.reloadResources 插桩联动 (Green Phase) a9ee08f
     - [x] 在 `MinecraftTransformer` 中对 `MinecraftServer.reloadResources` 进行字节码插桩，在完成时触发 `AgentBridge.onServerReloadResources()`
     - [x] 调整 `ScriptManager.reload()` 逻辑，使 `/reloadjs` 专精于 JS 重载与客户端提示同步
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) a9ee08f
 
 ## Phase 5: 全链路构建与端到端回归验收
 - [ ] Task: 自动化测试全量回归与覆盖率检查
