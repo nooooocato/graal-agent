@@ -5,6 +5,7 @@
 -   [Product Definition](./product.md)
 -   [Product Guidelines](./product-guidelines.md)
 -   [Tech Stack](./tech-stack.md)
+-   [Architecture & Technical Wiki (docs/)](../docs/Index.md)
 
 ## Workflow
 
