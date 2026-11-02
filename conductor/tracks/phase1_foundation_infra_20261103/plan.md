@@ -4,10 +4,10 @@
 - [x] Task: 编写 DiagnosticsHub 与 CrashDumpRecorder 单元测试 (Red Phase) e8eaa54
     - [x] 编写日志级别过滤与 ANSI 着色单元测试
     - [x] 编写异步队列落盘与崩溃快照生成单元测试
-- [ ] Task: 实现 DiagnosticsHub 与 CrashDumpRecorder (Green Phase)
-    - [ ] 创建 `com.graalagent.diagnostics.DiagnosticsHub` 与日志级别枚举
-    - [ ] 实现动态探测绑定 Log4j 2 的适配逻辑
-    - [ ] 实现 `com.graalagent.diagnostics.CrashDumpRecorder` 环境与栈快照抓取
+- [x] Task: 实现 DiagnosticsHub 与 CrashDumpRecorder (Green Phase) f6a4c92
+    - [x] 创建 `com.graalagent.diagnostics.DiagnosticsHub` 与日志级别枚举
+    - [x] 实现动态探测绑定 Log4j 2 的适配逻辑
+    - [x] 实现 `com.graalagent.diagnostics.CrashDumpRecorder` 环境与栈快照抓取
 - [ ] Task: 重构与覆盖率校验 (Refactor Phase)
     - [ ] 统一现有旧 `Logger` 的方法委托至 `DiagnosticsHub`
     - [ ] 确保测试覆盖率超过 80%
