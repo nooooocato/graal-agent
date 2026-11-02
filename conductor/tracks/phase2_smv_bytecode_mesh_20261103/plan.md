@@ -31,17 +31,17 @@
     - [ ] 创建 `com.graalagent.transformer.plugins.PacketListenerPlugin`
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (5ba948a)
 
-## Phase 4: 服务端与系统插件集落地 (Server & System Plugins)
+## Phase 4: 服务端与系统插件集落地 (Server & System Plugins) [checkpoint: a51a900]
 - [x] Task: 编写服务端与系统插件单元测试 (Red Phase) (8fdd5ed)
-    - [ ] 编写 `ServerLifecyclePlugin` 与 `ServerTickPlugin` 测试
-    - [ ] 编写 `CommandsInitPlugin` 测试
-    - [ ] 编写 `BundlerPlugin` 与 `PackRepositoryPlugin` 测试
+    - [x] 编写 `ServerLifecyclePlugin` 与 `ServerTickPlugin` 测试
+    - [x] 编写 `CommandsInitPlugin` 测试
+    - [x] 编写 `BundlerPlugin` 与 `PackRepositoryPlugin` 测试
 - [x] Task: 实现服务端与系统微插件 (Green Phase) (abd23aa)
-    - [ ] 创建 `com.graalagent.transformer.plugins.ServerLifecyclePlugin`
-    - [ ] 创建 `com.graalagent.transformer.plugins.ServerTickPlugin`
-    - [ ] 创建 `com.graalagent.transformer.plugins.CommandsInitPlugin`
-    - [ ] 创建 `com.graalagent.transformer.plugins.BundlerPlugin`
-    - [ ] 创建 `com.graalagent.transformer.plugins.PackRepositoryPlugin`
+    - [x] 创建 `com.graalagent.transformer.plugins.ServerLifecyclePlugin`
+    - [x] 创建 `com.graalagent.transformer.plugins.ServerTickPlugin`
+    - [x] 创建 `com.graalagent.transformer.plugins.CommandsInitPlugin`
+    - [x] 创建 `com.graalagent.transformer.plugins.BundlerPlugin`
+    - [x] 创建 `com.graalagent.transformer.plugins.PackRepositoryPlugin`
 - [x] Task: 废弃并移除旧版巨石类 `MinecraftTransformer` (Refactor Phase) (79c0da6)
     - [x] 将 `AgentBootstrap` 中的转换器注册更新为 `SMVOrchestrator`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (a51a900)
