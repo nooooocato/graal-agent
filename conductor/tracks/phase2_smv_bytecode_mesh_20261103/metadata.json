@@ -1,0 +1,8 @@
+{
+  "track_id": "phase2_smv_bytecode_mesh_20261103",
+  "type": "Refactor",
+  "status": "new",
+  "created_at": "2026-11-03T00:38:00+08:00",
+  "updated_at": "2026-11-03T00:38:00+08:00",
+  "description": "第二阶段：影子方法虚拟化网格与插桩解耦 (SMV Bytecode Mesh & Plugin Pipeline)"
+}

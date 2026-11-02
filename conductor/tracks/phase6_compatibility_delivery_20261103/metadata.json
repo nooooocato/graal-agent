@@ -1,0 +1,8 @@
+{
+  "track_id": "phase6_compatibility_delivery_20261103",
+  "type": "Refactor",
+  "status": "new",
+  "created_at": "2026-11-03T00:38:00+08:00",
+  "updated_at": "2026-11-03T00:38:00+08:00",
+  "description": "第六阶段：旧版脚本兼容垫片、基准压测与交付 (Legacy Compatibility Shim & Delivery)"
+}

@@ -1,0 +1,8 @@
+{
+  "track_id": "phase4_dual_context_security_20261103",
+  "type": "Refactor",
+  "status": "new",
+  "created_at": "2026-11-03T00:38:00+08:00",
+  "updated_at": "2026-11-03T00:38:00+08:00",
+  "description": "第四阶段：双容器零信任物理隔离与闭包令牌 (Dual-Context Zero-Trust & Closure Tokens)"
+}

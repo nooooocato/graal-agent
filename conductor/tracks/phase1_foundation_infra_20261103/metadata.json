@@ -1,0 +1,8 @@
+{
+  "track_id": "phase1_foundation_infra_20261103",
+  "type": "Refactor",
+  "status": "new",
+  "created_at": "2026-11-03T00:38:00+08:00",
+  "updated_at": "2026-11-03T00:38:00+08:00",
+  "description": "第一阶段：基础设施与指令网关重构 (MethodHandleCache, BrigadierAdapter, DiagnosticsHub)"
+}
