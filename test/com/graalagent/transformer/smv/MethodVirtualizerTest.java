@@ -29,6 +29,15 @@ public class MethodVirtualizerTest {
         public double complexCalculation(int i, long l, double d, String s) {
             return i + l + d + s.length();
         }
+
+        public String parseNumberWithTryCatch(String text) {
+            try {
+                int val = Integer.parseInt(text);
+                return "Parsed: " + val;
+            } catch (NumberFormatException e) {
+                return "Caught: " + e.getClass().getSimpleName();
+            }
+        }
     }
 
     public static void onHook() {
@@ -171,6 +180,56 @@ public class MethodVirtualizerTest {
         Method method = dynamicClass.getMethod("complexCalculation", int.class, long.class, double.class, String.class);
         Object result = method.invoke(instance, 10, 20L, 30.5, "test");
         Assert.assertEquals(64.5, (Double) result);
+    }
+
+    public void testExceptionTablePreservationAndBytecodeVerification() throws Exception {
+        byte[] originalBytes = getSampleClassBytes();
+        ClassFile cf = ClassFile.of();
+        ClassModel cm = cf.parse(originalBytes);
+
+        byte[] transformedBytes = cf.transformClass(cm, (cb, ce) -> {
+            if (ce instanceof MethodModel mm && mm.methodName().stringValue().equals("parseNumberWithTryCatch")) {
+                MethodVirtualizer.virtualize(cb, mm, "$$shadow$parseNumberWithTryCatch",
+                        MethodVirtualizer.createForwardDispatcher(
+                                ClassDesc.of(SampleTarget.class.getName()),
+                                "$$shadow$parseNumberWithTryCatch",
+                                mm.methodTypeSymbol(),
+                                false
+                        )
+                );
+                return;
+            }
+            cb.with(ce);
+        });
+
+        // 1. Verify that shadow method contains ExceptionCatch elements
+        ClassModel transformedModel = cf.parse(transformedBytes);
+        boolean hasExceptionCatch = false;
+        for (MethodModel mm : transformedModel.methods()) {
+            if (mm.methodName().stringValue().equals("$$shadow$parseNumberWithTryCatch")) {
+                for (java.lang.classfile.CodeElement codeEl : mm.code().orElseThrow()) {
+                    if (codeEl instanceof java.lang.classfile.instruction.ExceptionCatch) {
+                        hasExceptionCatch = true;
+                        break;
+                    }
+                }
+            }
+        }
+        Assert.assertTrue(hasExceptionCatch, "Shadow method must preserve ExceptionCatch entries");
+
+        // 2. Load into classloader to trigger strict JVM bytecode verification & StackMap checks
+        DynamicClassLoader loader = new DynamicClassLoader();
+        Class<?> dynamicClass = loader.defineClass(SampleTarget.class.getName(), transformedBytes);
+        Object instance = dynamicClass.getDeclaredConstructor().newInstance();
+        Method method = dynamicClass.getMethod("parseNumberWithTryCatch", String.class);
+
+        // Test normal path
+        Object okResult = method.invoke(instance, "12345");
+        Assert.assertEquals("Parsed: 12345", okResult);
+
+        // Test exception caught path
+        Object errResult = method.invoke(instance, "not-a-number");
+        Assert.assertEquals("Caught: NumberFormatException", errResult);
     }
 
     private static class DynamicClassLoader extends ClassLoader {
