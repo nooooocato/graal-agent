@@ -18,7 +18,7 @@
 - [x] Task: 实现 SMVOrchestrator 与插件注册表 (Green Phase) (c1073ec)
     - [ ] 创建 `com.graalagent.transformer.ClassTransformPlugin` 接口
     - [ ] 创建 `com.graalagent.transformer.SMVOrchestrator`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (60a16d9)
 
 ## Phase 3: 客户端插件集落地 (Client Plugins)
 - [ ] Task: 编写客户端插件单元测试 (Red Phase)
