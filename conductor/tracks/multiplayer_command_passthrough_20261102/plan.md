@@ -22,7 +22,7 @@
     - [x] 在服务端热重载或指令注册时，调用 `server.getPlayerList().getPlayers().forEach(p -> server.getCommands().sendCommands(p))` 动态推送更新
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) c1513e7
 
-## Phase 3: 多人环境客户端穿透安全沙箱
+## Phase 3: 多人环境客户端穿透安全沙箱 [checkpoint: 164e92c]
 - [x] Task: 编写客户端玩家执行 JS 的安全沙箱单元测试 (Red Phase) d654a89
     - [x] 编写测试验证玩家执行 `Java.type(...)` 抛出安全异常
     - [x] 编写测试验证玩家执行 `agent.fs.writeFile(...)` 抛出权限拒绝
@@ -30,7 +30,7 @@
 - [x] Task: 实现执行来源识别与降权沙箱引擎 (Green Phase) 164e92c
     - [x] 在 `ServerCommandDispatcher` 中区分指令来源（控制台 vs 游戏内玩家）
     - [x] 在 `ScriptManager` 中为玩家穿透执行提供受限环境（屏蔽 `Java` 全局对象，禁用写文件操作）
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 164e92c
 
 ## Phase 4: 原版 /reload 与 /reloadjs 包含关系重构
 - [ ] Task: 编写重载层级关系单元测试 (Red Phase)
