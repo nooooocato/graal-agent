@@ -4,7 +4,7 @@
 - [x] Task: 编写 MethodVirtualizer 字节码重命名与转发测试 (Red Phase) (6c66241)
     - [ ] 构造样本类并验证生成 `$$shadow$<method>` 私有合成方法
     - [ ] 验证原方法槽位成功嵌入分发跳转指令
-- [ ] Task: 实现 MethodVirtualizer 与分发逻辑 (Green Phase)
+- [x] Task: 实现 MethodVirtualizer 与分发逻辑 (Green Phase) (4c48161)
     - [ ] 创建 `com.graalagent.transformer.smv.MethodVirtualizer`
     - [ ] 实现针对无参、带参、带返回值方法的通用分发桩生成器
 - [ ] Task: 栈映射表与异常表校验 (Refactor Phase)
