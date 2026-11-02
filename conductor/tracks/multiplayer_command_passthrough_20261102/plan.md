@@ -33,10 +33,10 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 164e92c
 
 ## Phase 4: 原版 /reload 与 /reloadjs 包含关系重构
-- [ ] Task: 编写重载层级关系单元测试 (Red Phase)
-    - [ ] 编写测试验证 `/reloadjs` 仅重载 JS，不重载数据包
-    - [ ] 编写测试验证原版 `reloadResources` 触发时自动联动重载 JS
-- [ ] Task: 实现 MinecraftServer.reloadResources 插桩联动 (Green Phase)
+- [x] Task: 编写重载层级关系单元测试 (Red Phase) bb67a1c
+    - [x] 编写测试验证 `/reloadjs` 仅重载 JS，不重载数据包
+    - [x] 编写测试验证原版 `reloadResources` 触发时自动联动重载 JS
+- [~] Task: 实现 MinecraftServer.reloadResources 插桩联动 (Green Phase)
     - [ ] 在 `MinecraftTransformer` 中对 `MinecraftServer.reloadResources` 进行字节码插桩，在完成时触发 `AgentBridge.onServerReloadResources()`
     - [ ] 调整 `ScriptManager.reload()` 逻辑，使 `/reloadjs` 专精于 JS 重载与客户端提示同步
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
