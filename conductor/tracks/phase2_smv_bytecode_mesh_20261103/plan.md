@@ -29,7 +29,7 @@
     - [ ] 创建 `com.graalagent.transformer.plugins.ClientTickPlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.KeyboardHandlerPlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.PacketListenerPlugin`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (5ba948a)
 
 ## Phase 4: 服务端与系统插件集落地 (Server & System Plugins)
 - [ ] Task: 编写服务端与系统插件单元测试 (Red Phase)
