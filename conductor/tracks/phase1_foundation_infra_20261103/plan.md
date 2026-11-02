@@ -20,8 +20,8 @@
 - [x] Task: 实现 MethodHandleCache 与预热逻辑 (Green Phase) 1d9e596
     - [x] 创建 `com.graalagent.bridge.MethodHandleCache`
     - [x] 建立针对 `Component.literal`、`isSameThread`、`execute` 的预热方法
-- [ ] Task: 整合与回退测试 (Refactor Phase)
-    - [ ] 在 `EnvironmentContext` 中用句柄替换裸反射调用
+- [x] Task: 整合与回退测试 (Refactor Phase) 7ce7183
+    - [x] 在 `EnvironmentContext` 中用句柄替换裸反射调用
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 统一 Brigadier 指令网关 (BrigadierAdapter)
