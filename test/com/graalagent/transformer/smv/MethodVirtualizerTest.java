@@ -25,6 +25,10 @@ public class MethodVirtualizerTest {
         public static int add(int a, int b) {
             return a + b;
         }
+
+        public double complexCalculation(int i, long l, double d, String s) {
+            return i + l + d + s.length();
+        }
     }
 
     public static void onHook() {
@@ -139,6 +143,34 @@ public class MethodVirtualizerTest {
         Method addMethod = dynamicClass.getMethod("add", int.class, int.class);
         Object result = addMethod.invoke(null, 15, 27);
         Assert.assertEquals(42, result);
+    }
+
+    public void testComplexParametersAndReturnTypes() throws Exception {
+        byte[] originalBytes = getSampleClassBytes();
+        ClassFile cf = ClassFile.of();
+        ClassModel cm = cf.parse(originalBytes);
+
+        byte[] transformedBytes = cf.transformClass(cm, (cb, ce) -> {
+            if (ce instanceof MethodModel mm && mm.methodName().stringValue().equals("complexCalculation")) {
+                MethodVirtualizer.virtualize(cb, mm, "$$shadow$complexCalculation",
+                        MethodVirtualizer.createForwardDispatcher(
+                                ClassDesc.of(SampleTarget.class.getName()),
+                                "$$shadow$complexCalculation",
+                                mm.methodTypeSymbol(),
+                                false
+                        )
+                );
+                return;
+            }
+            cb.with(ce);
+        });
+
+        DynamicClassLoader loader = new DynamicClassLoader();
+        Class<?> dynamicClass = loader.defineClass(SampleTarget.class.getName(), transformedBytes);
+        Object instance = dynamicClass.getDeclaredConstructor().newInstance();
+        Method method = dynamicClass.getMethod("complexCalculation", int.class, long.class, double.class, String.class);
+        Object result = method.invoke(instance, 10, 20L, 30.5, "test");
+        Assert.assertEquals(64.5, (Double) result);
     }
 
     private static class DynamicClassLoader extends ClassLoader {
