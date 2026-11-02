@@ -100,6 +100,22 @@ public class AgentAPI {
         }
     }
 
+    // =========================================================================
+    // 定时器机制说明与已知架构问题记录 (Timer Concurrency Notice)
+    // -------------------------------------------------------------------------
+    // [Bug 原因 / Root Cause]:
+    // GraalJS 的单 Context 默认禁止跨线程并发访问（或并发未经过 context.enter()/leave() 同步调度）。
+    // 当前 setTimeout 与 setInterval 使用后台专属调度线程池 (graal-agent-timer) 直接执行 JS 回调 (scriptManager.executeCallback(callback))。
+    // 当服务器主线程 (Server thread) 恰好也在执行 JS 脚本（或正在处理 tick/指令）时，
+    // 后台定时器线程触发回调会抛出 IllegalStateException:
+    // "Multi threaded access requested by thread graal-agent-timer but is not allowed for language(s) js"
+    //
+    // [解决方案规划 / Architecture Roadmap]:
+    // 经讨论不采用粗暴的局部包装临时方案，而是在后续重构计划
+    // 《第三阶段：核心并发、看门狗防卡死与事务缓冲 (Concurrency, Watchdog & Transaction Buffer)》
+    // 中统一进行架构翻新：通过将异步/定时回调统一安全提交至 Minecraft 主线程 Tick 任务队列 (EnvironmentContext.execute)
+    // 或基于双缓冲/上下文安全调度租约执行，彻底保证 GraalJS 上下文的单线程并发安全性。
+    // =========================================================================
     public int setTimeout(Value callback, long delayMs) {
         int id = timerIdGen.getAndIncrement();
         ScheduledFuture<?> future = scheduler.schedule(() -> {
