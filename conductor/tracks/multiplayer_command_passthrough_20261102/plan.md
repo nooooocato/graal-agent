@@ -14,9 +14,9 @@
 - [x] Task: 编写多人游戏指令穿透与过滤测试 (Red Phase) 51fd487
     - [x] 编写测试验证在多人模式下 `/serverinfo`、`/js`、`/reloadjs` 返回 false（穿透发包）
     - [x] 编写测试验证 `/cjs`、`/clientjs` 在客户端本地拦截并求值
-- [ ] Task: 实现客户端指令穿透与本地专属调试指令 (Green Phase)
-    - [ ] 在 `AgentBridge.isMultiplayer()` 中接入 `Minecraft.getInstance().isLocalServer()` 检测
-    - [ ] 改造 `ScriptManager.onSendCommand`：若处于多人模式，将指令穿透至服务端；仅拦截处理 `/cjs`
+- [x] Task: 实现客户端指令穿透与本地专属调试指令 (Green Phase) 792514c
+    - [x] 在 `AgentBridge.isMultiplayer()` 中接入 `Minecraft.getInstance().isLocalServer()` 检测
+    - [x] 改造 `ScriptManager.onSendCommand`：若处于多人模式，将指令穿透至服务端；仅拦截处理 `/cjs`
 - [ ] Task: 改造指令提示同步逻辑 (Green Phase)
     - [ ] 调整 `ClientPacketListener.handleCommands`：多人模式下不注入本地指令，完全跟随服务端网络包
     - [ ] 在服务端热重载或指令注册时，调用 `server.getPlayerList().getPlayers().forEach(p -> server.getCommands().sendCommands(p))` 动态推送更新
