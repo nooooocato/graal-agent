@@ -32,7 +32,7 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (5ba948a)
 
 ## Phase 4: 服务端与系统插件集落地 (Server & System Plugins)
-- [ ] Task: 编写服务端与系统插件单元测试 (Red Phase)
+- [x] Task: 编写服务端与系统插件单元测试 (Red Phase) (8fdd5ed)
     - [ ] 编写 `ServerLifecyclePlugin` 与 `ServerTickPlugin` 测试
     - [ ] 编写 `CommandsInitPlugin` 测试
     - [ ] 编写 `BundlerPlugin` 与 `PackRepositoryPlugin` 测试
