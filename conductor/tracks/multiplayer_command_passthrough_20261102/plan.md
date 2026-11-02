@@ -44,5 +44,5 @@
 ## Phase 5: 全链路构建与端到端回归验收
 - [x] Task: 自动化测试全量回归与覆盖率检查
     - [x] 运行 `run-tests.ps1` 确保全部单元测试 100% 通过
-- [~] Task: 执行 `build.ps1` 打包最新 `mc-agent.jar`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: 执行 `build.ps1` 打包最新 `mc-agent.jar`
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
