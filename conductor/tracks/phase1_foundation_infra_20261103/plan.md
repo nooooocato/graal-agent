@@ -1,9 +1,9 @@
 # Implementation Plan: 第一阶段：基础设施重构与统一指令网关 (Foundation Infrastructure & Command Gateway)
 
 ## Phase 1: 结构化遥测与崩溃转储引擎 (Diagnostics & Logging)
-- [ ] Task: 编写 DiagnosticsHub 与 CrashDumpRecorder 单元测试 (Red Phase)
-    - [ ] 编写日志级别过滤与 ANSI 着色单元测试
-    - [ ] 编写异步队列落盘与崩溃快照生成单元测试
+- [x] Task: 编写 DiagnosticsHub 与 CrashDumpRecorder 单元测试 (Red Phase) e8eaa54
+    - [x] 编写日志级别过滤与 ANSI 着色单元测试
+    - [x] 编写异步队列落盘与崩溃快照生成单元测试
 - [ ] Task: 实现 DiagnosticsHub 与 CrashDumpRecorder (Green Phase)
     - [ ] 创建 `com.graalagent.diagnostics.DiagnosticsHub` 与日志级别枚举
     - [ ] 实现动态探测绑定 Log4j 2 的适配逻辑
