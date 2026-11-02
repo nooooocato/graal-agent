@@ -371,7 +371,30 @@ public class ScriptManager {
 
         String trimmed = command.trim();
 
-        // 1. /js <expression>
+        // 1. Client-only local debug commands: /cjs <expression> or /clientjs <expression>
+        if (trimmed.startsWith("cjs ") || trimmed.equals("cjs") || trimmed.startsWith("clientjs ") || trimmed.equals("clientjs")) {
+            String code = "";
+            if (trimmed.startsWith("cjs ") || trimmed.equals("cjs")) {
+                code = trimmed.length() > 3 ? trimmed.substring(3).trim() : "";
+            } else if (trimmed.startsWith("clientjs ") || trimmed.equals("clientjs")) {
+                code = trimmed.length() > 8 ? trimmed.substring(8).trim() : "";
+            }
+            if (code.isEmpty()) {
+                AgentBridge.sendChatMessage("§6用法: §e/cjs <客户端JavaScript表达式>");
+                return true;
+            }
+            executeJsCommand(code);
+            return true;
+        }
+
+        // 2. Multiplayer Passthrough:
+        // In multiplayer, client must NOT swallow server commands (/js, /reloadjs, custom commands).
+        // Return false so ClientPacketListener forwards them to the server via ServerboundChatCommandPacket.
+        if (AgentBridge.isMultiplayer()) {
+            return false;
+        }
+
+        // 3. /js <expression>
         if (trimmed.startsWith("js ") || trimmed.equals("js")) {
             String code = trimmed.length() > 2 ? trimmed.substring(2).trim() : "";
             if (code.isEmpty()) {
@@ -382,13 +405,13 @@ public class ScriptManager {
             return true;
         }
 
-        // 2. /reloadjs or /jsreload
+        // 4. /reloadjs or /jsreload
         if (trimmed.equalsIgnoreCase("reloadjs") || trimmed.equalsIgnoreCase("jsreload")) {
             reload();
             return true;
         }
 
-        // 3. Custom commands registered via agent.registerCommand
+        // 5. Custom commands registered via agent.registerCommand
         String[] parts = trimmed.split(" ", 2);
         String cmdName = parts[0].toLowerCase();
         Value customCallback = customCommands.get(cmdName);

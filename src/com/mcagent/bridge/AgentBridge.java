@@ -22,6 +22,23 @@ public class AgentBridge {
         if (mockMultiplayer != null) {
             return mockMultiplayer;
         }
+        Object mc = getMinecraft();
+        if (mc != null) {
+            try {
+                Method isLocalServer = mc.getClass().getMethod("isLocalServer");
+                boolean local = (boolean) isLocalServer.invoke(mc);
+                if (!local) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+            try {
+                Method getCurrentServer = mc.getClass().getMethod("getCurrentServer");
+                Object serverData = getCurrentServer.invoke(mc);
+                if (serverData != null) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+        }
         return false;
     }
 
