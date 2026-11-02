@@ -12,6 +12,18 @@ public class AgentBridge {
     private static volatile Method literalMethod = null;
     private static volatile Method sendSystemMessageMethod = null;
     private static volatile Field playerField = null;
+    private static volatile Boolean mockMultiplayer = null;
+
+    public static void setMockMultiplayer(Boolean value) {
+        mockMultiplayer = value;
+    }
+
+    public static boolean isMultiplayer() {
+        if (mockMultiplayer != null) {
+            return mockMultiplayer;
+        }
+        return false;
+    }
 
     public static Object getMinecraft() {
         if (cachedMinecraft != null) {
