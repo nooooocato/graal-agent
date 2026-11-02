@@ -5,7 +5,8 @@ param(
 # PowerShell 7 SMV JavaScript Verification Runner
 $ErrorActionPreference = "Stop"
 
-$jdkPath = "$env:USERPROFILE\Downloads\graalvm-jdk-25_windows-x64_bin\graalvm-jdk-25.0.4+7.1"
+# GraalVM JDK 25 path - defaults to Downloads in user profile or GRAALVM_HOME
+$jdkPath = if ($env:GRAALVM_HOME) { $env:GRAALVM_HOME } else { "$env:USERPROFILE\Downloads\graalvm-jdk-25_windows-x64_bin\graalvm-jdk-25.0.4+7.1" }
 $javac = Join-Path $jdkPath "bin\javac.exe"
 $java = Join-Path $jdkPath "bin\java.exe"
 
