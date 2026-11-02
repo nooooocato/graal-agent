@@ -25,9 +25,9 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 统一 Brigadier 指令网关 (BrigadierAdapter)
-- [ ] Task: 编写 BrigadierAdapter 节点构建与动态代理测试 (Red Phase)
-    - [ ] 编写 Fluent DSL 链式构建测试 (字面量、贪婪字符串参数)
-    - [ ] 编写动态代理回调触发测试
+- [x] Task: 编写 BrigadierAdapter 节点构建与动态代理测试 (Red Phase) dc20295
+    - [x] 编写 Fluent DSL 链式构建测试 (字面量、贪婪字符串参数)
+    - [x] 编写动态代理回调触发测试
 - [ ] Task: 实现 BrigadierAdapter 与全员推送逻辑 (Green Phase)
     - [ ] 创建 `com.graalagent.bridge.brigadier.BrigadierAdapter`
     - [ ] 实现 `NodeBuilder` 与统一反射 Proxy 绑定
