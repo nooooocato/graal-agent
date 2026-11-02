@@ -22,8 +22,8 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [dc8bc90]
 
 ## Phase 3: Server Brigadier Command Integration
-- [ ] Task: Create Tests for Server Command Dispatcher
-    - [ ] Write tests verifying server command node registration for `/js` and `/reloadjs`
+- [x] Task: Create Tests for Server Command Dispatcher [996ed07]
+    - [x] Write tests verifying server command node registration for `/js` and `/reloadjs`
 - [ ] Task: Implement Bytecode Transformer for Server Commands
     - [ ] Instrument `net.minecraft.commands.Commands` to register `/js`, `/reloadjs`, and dynamic commands
     - [ ] Ensure permission level check (requires op / level 2+ on dedicated servers)
