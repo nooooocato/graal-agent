@@ -1,9 +1,9 @@
 # Implementation Plan: Server Support & Scripts File I/O (`server_support_file_io`)
 
 ## Phase 1: Sandboxed Scripts File I/O (`agent.fs`)
-- [ ] Task: Create Unit Tests for Sandboxed File System (`ScriptFileSystemTest`)
-    - [ ] Write unit tests verifying path traversal prevention (rejecting `../` escapes outside `scripts/`)
-    - [ ] Write unit tests verifying UTF-8 read/write, directory creation, exists checks, file listing, and deletion
+- [x] Task: Create Unit Tests for Sandboxed File System (`ScriptFileSystemTest`) [4891a19]
+    - [x] Write unit tests verifying path traversal prevention (rejecting `../` escapes outside `scripts/`)
+    - [x] Write unit tests verifying UTF-8 read/write, directory creation, exists checks, file listing, and deletion
 - [ ] Task: Implement `ScriptFileSystem` and GraalJS Binding
     - [ ] Implement `com.mcagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
     - [ ] Expose `agent.fs` in `AgentAPI.java` with idiomatic JS methods
