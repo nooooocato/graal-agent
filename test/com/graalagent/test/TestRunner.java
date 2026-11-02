@@ -31,6 +31,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.server.ReloadHierarchyTest");
             addTestClassIfExists(testClasses, "com.graalagent.datapack.DatapackDiscoveryTest");
             addTestClassIfExists(testClasses, "com.graalagent.diagnostics.DiagnosticsTest");
+            addTestClassIfExists(testClasses, "com.graalagent.bridge.MethodHandleCacheTest");
         }
 
         int total = 0;
