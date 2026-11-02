@@ -185,6 +185,11 @@ public class ScriptManager {
                 },
                 configurable: true
             });
+
+            Object.defineProperty(globalThis, 'fs', {
+                get: () => agent.fs,
+                configurable: true
+            });
         """);
 
         Logger.info("JavaScript Polyglot Context initialized successfully.");

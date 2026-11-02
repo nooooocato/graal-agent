@@ -1,6 +1,7 @@
 package com.mcagent.script;
 
 import com.mcagent.bridge.AgentBridge;
+import com.mcagent.script.fs.ScriptFileSystem;
 import com.mcagent.util.Logger;
 import org.graalvm.polyglot.Value;
 
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AgentAPI {
     private final File scriptsDir;
     private final ScriptManager scriptManager;
+    private final ScriptFileSystem fs;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2, r -> {
         Thread t = new Thread(r, "mc-agent-timer");
         t.setDaemon(true);
@@ -24,6 +26,11 @@ public class AgentAPI {
     public AgentAPI(File scriptsDir, ScriptManager scriptManager) {
         this.scriptsDir = scriptsDir;
         this.scriptManager = scriptManager;
+        this.fs = new ScriptFileSystem(scriptsDir);
+    }
+
+    public ScriptFileSystem getFs() {
+        return fs;
     }
 
     public void reload() {

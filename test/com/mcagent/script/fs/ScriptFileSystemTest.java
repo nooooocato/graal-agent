@@ -98,4 +98,17 @@ public class ScriptFileSystemTest {
         Assert.assertTrue(deleted, "Delete should return true");
         Assert.assertFalse(fs.exists(filePath), "File should not exist after delete");
     }
+
+    public void testGraalJsFsIntegration() {
+        org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder("js")
+                .allowHostAccess(org.graalvm.polyglot.HostAccess.ALL)
+                .build();
+        context.getBindings("js").putMember("agentFs", fs);
+
+        context.eval("js", "agentFs.writeFile('js_output.txt', 'Hello from GraalJS!', 'utf-8');");
+
+        Assert.assertTrue(fs.exists("js_output.txt"), "File written via GraalJS should exist");
+        Assert.assertEquals("Hello from GraalJS!", fs.readFile("js_output.txt", "utf-8"));
+        context.close();
+    }
 }
