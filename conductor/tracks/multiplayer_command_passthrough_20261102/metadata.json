@@ -1,0 +1,8 @@
+{
+  "track_id": "multiplayer_command_passthrough_20261102",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-11-02T20:28:00+08:00",
+  "updated_at": "2026-11-02T20:28:00+08:00",
+  "description": "Multiplayer command passthrough, server-driven suggestion sync, security sandboxing, and reload hierarchy."
+}
