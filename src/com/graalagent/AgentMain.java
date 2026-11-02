@@ -1,7 +1,7 @@
 package com.graalagent;
 
 import com.graalagent.script.ScriptManager;
-import com.graalagent.transformer.MinecraftTransformer;
+import com.graalagent.transformer.SMVOrchestrator;
 import com.graalagent.util.Logger;
 
 import java.io.File;
@@ -49,9 +49,10 @@ public class AgentMain {
             // 4. Initialize ScriptManager
             ScriptManager.init(scriptsDir);
 
-            // 5. Register Minecraft bytecode transformer
-            inst.addTransformer(new MinecraftTransformer(), true);
-            Logger.info("MinecraftTransformer registered with Instrumentation.");
+            // 5. Register SMV bytecode mesh orchestrator & micro-plugins
+            SMVOrchestrator orchestrator = SMVOrchestrator.createDefault();
+            inst.addTransformer(orchestrator, true);
+            Logger.info("SMVOrchestrator registered with Instrumentation (8 micro-plugins active).");
 
             Logger.info("==================================================");
             Logger.info("Graal-JS-Agent initialization complete. Ready for MC!");

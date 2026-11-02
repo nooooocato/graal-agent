@@ -1,6 +1,7 @@
 package com.graalagent.transformer;
 
 import com.graalagent.script.ScriptManager;
+import com.graalagent.transformer.plugins.*;
 import com.graalagent.util.Logger;
 
 import java.lang.classfile.ClassElement;
@@ -26,6 +27,29 @@ public class SMVOrchestrator implements ClassFileTransformer {
     private final Map<String, List<ClassTransformPlugin>> plugins = new ConcurrentHashMap<>();
 
     public SMVOrchestrator() {
+    }
+
+    /**
+     * 注册所有内置的标准 SMV 微插件集
+     */
+    public void registerDefaultPlugins() {
+        registerPlugin(new ClientTickPlugin());
+        registerPlugin(new KeyboardHandlerPlugin());
+        registerPlugin(new PacketListenerPlugin());
+        registerPlugin(new ServerLifecyclePlugin());
+        registerPlugin(new ServerTickPlugin());
+        registerPlugin(new CommandsInitPlugin());
+        registerPlugin(new BundlerPlugin());
+        registerPlugin(new PackRepositoryPlugin());
+    }
+
+    /**
+     * 创建并初始化装配好所有默认微插件的 SMVOrchestrator 实例
+     */
+    public static SMVOrchestrator createDefault() {
+        SMVOrchestrator orchestrator = new SMVOrchestrator();
+        orchestrator.registerDefaultPlugins();
+        return orchestrator;
     }
 
     /**

@@ -148,4 +148,15 @@ public class SMVOrchestratorTest {
         Assert.assertNull(orchestrator.transform(null, "com/oracle/truffle/Truffle", null, null, dummy));
         Assert.assertNull(orchestrator.transform(null, "com/graalagent/bridge/AgentBridge", null, null, dummy));
     }
+
+    public void testCreateDefaultRegistersAllPlugins() {
+        SMVOrchestrator orchestrator = SMVOrchestrator.createDefault();
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/client/Minecraft").size());
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/client/KeyboardHandler").size());
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/client/multiplayer/ClientPacketListener").size());
+        Assert.assertEquals(2, orchestrator.getPluginsFor("net/minecraft/server/MinecraftServer").size());
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/commands/Commands").size());
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/bundler/Main").size());
+        Assert.assertEquals(1, orchestrator.getPluginsFor("net/minecraft/server/packs/repository/PackRepository").size());
+    }
 }
