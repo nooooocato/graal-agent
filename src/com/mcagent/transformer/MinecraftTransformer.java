@@ -41,6 +41,8 @@ public class MinecraftTransformer implements ClassFileTransformer {
                 currentBytes = transformClientPacketListener(currentBytes);
             } else if (className.equals("net/minecraft/server/MinecraftServer")) {
                 currentBytes = transformMinecraftServer(currentBytes);
+            } else if (className.equals("net/minecraft/commands/Commands")) {
+                currentBytes = transformCommands(currentBytes);
             }
 
             // Custom JavaScript transformers (delegated through ScriptManager's lock)
@@ -271,6 +273,39 @@ public class MinecraftTransformer implements ClassFileTransformer {
                     }));
                     return;
                 }
+            }
+            builder.with(element);
+        };
+        return classFile.transformClass(cm, ct);
+    }
+
+    private byte[] transformCommands(byte[] bytes) {
+        Logger.info("Instrumenting net.minecraft.commands.Commands (server command dispatcher hook)...");
+        ClassModel cm = classFile.parse(bytes);
+        ClassTransform ct = (builder, element) -> {
+            if (element instanceof MethodModel mm
+                    && mm.methodName().stringValue().equals("<init>")
+                    && mm.methodType().stringValue().equals("(Lnet/minecraft/commands/Commands$CommandSelection;Lnet/minecraft/commands/CommandBuildContext;)V")) {
+                builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                    @Override
+                    public void accept(CodeBuilder cb, CodeElement ce) {
+                        if (ce instanceof ReturnInstruction) {
+                            cb.aload(0);
+                            cb.invokevirtual(
+                                    ClassDesc.of("net.minecraft.commands.Commands"),
+                                    "getDispatcher",
+                                    MethodTypeDesc.ofDescriptor("()Lcom/mojang/brigadier/CommandDispatcher;")
+                            );
+                            cb.invokestatic(
+                                    ClassDesc.of("com.mcagent.bridge.AgentBridge"),
+                                    "onRegisterServerCommands",
+                                    MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
+                            );
+                        }
+                        cb.with(ce);
+                    }
+                }));
+                return;
             }
             builder.with(element);
         };

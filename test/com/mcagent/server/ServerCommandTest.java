@@ -22,4 +22,13 @@ public class ServerCommandTest {
     public void testPermissionPredicate() {
         Assert.assertTrue(ServerCommandDispatcher.checkPermission(null), "Console (null source/player) should always have permission");
     }
+
+    public void testServerCommandExecution() throws Exception {
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        Object mockSource = new Object();
+        int result = dispatcher.execute("reloadjs", mockSource);
+        Assert.assertEquals(1, result);
+    }
 }

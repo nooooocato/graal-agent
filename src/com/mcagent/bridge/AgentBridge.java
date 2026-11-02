@@ -99,6 +99,11 @@ public class AgentBridge {
         }
     }
 
+    public static void onRegisterServerCommands(Object dispatcher) {
+        if (dispatcher == null) return;
+        com.mcagent.server.ServerCommandDispatcher.registerServerCommands(dispatcher);
+    }
+
     public static void sendChatMessage(String message) {
         // Dedicated Server mode: broadcast directly to console and players
         if (cachedServer != null && cachedMinecraft == null) {

@@ -77,6 +77,10 @@ public class ScriptManager {
         }
     }
 
+    public Map<String, Value> getCustomCommands() {
+        return Collections.unmodifiableMap(customCommands);
+    }
+
     public synchronized byte[] applyCustomTransformers(String className, byte[] bytes) {
         if (customTransformers.isEmpty() || context == null) {
             return null;
