@@ -23,7 +23,7 @@ agent.registerCommand("myfly", (args) => {
 });
 
 agent.registerCommand("jshelp", (args) => {
-    agent.chat("§6====== [MC-JS-Agent 标准指令列表] ======");
+    agent.chat("§6====== [Graal-JS-Agent 标准指令列表] ======");
     agent.chat("§e/js <表达式> §7- 在客户端执行 JS 脚本表达式 (如: /js player.getHealth())");
     agent.chat("§e/reloadjs §7- 热重载全部 JS 脚本");
     agent.chat("§e/mypos §7- 获取高精度坐标与朝向");

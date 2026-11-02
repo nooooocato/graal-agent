@@ -5,7 +5,7 @@
 function ensureSampleRecipeDatapack() {
     try {
         // 1. 初始化数据包目录与 pack.mcmeta
-        agent.createDatapack("js_recipes", "MC-JS-Agent 动态合成配方数据包");
+        agent.createDatapack("js_recipes", "Graal-JS-Agent 动态合成配方数据包");
 
         // 2. 写入自定义合成表: 2个泥土合成1颗钻石 (测试原版客户端直连生效)
         const recipeJson = JSON.stringify({
@@ -21,7 +21,7 @@ function ensureSampleRecipeDatapack() {
             }
         }, null, 2);
 
-        fs.writeFile("datapacks/js_recipes/data/mcagent/recipe/dirt_to_diamond.json", recipeJson);
+        fs.writeFile("datapacks/js_recipes/data/graalagent/recipe/dirt_to_diamond.json", recipeJson);
         console.log("[Datapack] 成功生成动态数据包配方: 2x 泥土 => 1x 钻石");
     } catch (err) {
         console.error("[Datapack] 生成配方失败: " + err.message);

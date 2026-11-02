@@ -6,7 +6,7 @@
 agent.registerCommand('serverinfo', (args) => {
     const isClient = agent.isClient();
     const isDedicated = agent.isDedicatedServer();
-    agent.chat('§6====== [MC-JS-Agent 运行环境信息] ======');
+    agent.chat('§6====== [Graal-JS-Agent 运行环境信息] ======');
     agent.chat(`§b环境类型: §e${isDedicated ? 'Dedicated Server (专用服务端)' : (isClient ? 'Client (客户端/内置服务端)' : '未知')}`);
     if (server) {
         agent.chat(`§b服务端版本: §e${server.getServerVersion()}`);
@@ -26,7 +26,7 @@ agent.registerCommand('evaltest', (args) => {
 // 3. 注册文件系统测试指令 /fstest
 agent.registerCommand('fstest', (args) => {
     try {
-        fs.writeFile('test_verify.txt', 'MC-JS-Agent File I/O Verified! 时间戳: ' + Date.now());
+        fs.writeFile('test_verify.txt', 'Graal-JS-Agent File I/O Verified! 时间戳: ' + Date.now());
         const content = fs.readFile('test_verify.txt');
         agent.chat('§a[FS测试成功] 写入并读取内容: §f' + content);
     } catch (err) {

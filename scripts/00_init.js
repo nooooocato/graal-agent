@@ -17,7 +17,7 @@ events.onInit((minecraft) => {
     // 定时检查玩家登录状态并发送欢迎消息
     const checkTimer = setInterval(() => {
         if (player) {
-            agent.chat("§a[MC-JS-Agent] 脚本引擎已连接! 可在聊天栏输入 §e/js <代码> §a求值，输入 §e/reloadjs §a重载。");
+            agent.chat("§a[Graal-JS-Agent] 脚本引擎已连接! 可在聊天栏输入 §e/js <代码> §a求值，输入 §e/reloadjs §a重载。");
             clearInterval(checkTimer);
         }
     }, 1000);
