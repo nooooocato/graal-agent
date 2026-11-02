@@ -91,19 +91,25 @@ public class EnvironmentContext {
                 Method literalMethod = compClass.getMethod("literal", String.class);
                 Object comp = literalMethod.invoke(null, message);
 
-                // 1. Send to server console
-                Method sendSystem = serverInstance.getClass().getMethod("sendSystemMessage", compClass);
-                sendSystem.invoke(serverInstance, comp);
-
-                // 2. Broadcast to all connected players if player list is present
+                boolean sent = false;
                 try {
                     Method getPlayerList = serverInstance.getClass().getMethod("getPlayerList");
                     Object playerList = getPlayerList.invoke(serverInstance);
                     if (playerList != null) {
+                        // In vanilla Minecraft, playerList.broadcastSystemMessage forwards to
+                        // server.sendSystemMessage (console) AND all connected players.
                         Method broadcast = playerList.getClass().getMethod("broadcastSystemMessage", compClass, boolean.class);
                         broadcast.invoke(playerList, comp, false);
+                        sent = true;
                     }
                 } catch (Throwable ignored) {}
+
+                if (!sent) {
+                    Method sendSystem = serverInstance.getClass().getMethod("sendSystemMessage", compClass);
+                    sendSystem.invoke(serverInstance, comp);
+                }
+
+                Logger.logToFileOnly("[Broadcast] " + message);
                 return;
             } catch (Throwable t) {
                 Logger.warn("Failed to broadcast on server, falling back to chat/log: " + t.getMessage());

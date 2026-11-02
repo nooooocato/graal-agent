@@ -122,7 +122,11 @@ public class AgentBridge {
                     }
                     Object player = playerField.get(mc);
                     if (player != null) {
-                        Class<?> compClass = Class.forName("net.minecraft.network.chat.Component");
+                        ClassLoader cl = mc.getClass().getClassLoader();
+                        if (cl == null) {
+                            cl = ClassLoader.getSystemClassLoader();
+                        }
+                        Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
                         if (literalMethod == null) {
                             literalMethod = compClass.getMethod("literal", String.class);
                         }
@@ -132,6 +136,7 @@ public class AgentBridge {
                             sendSystemMessageMethod = player.getClass().getMethod("sendSystemMessage", compClass);
                         }
                         sendSystemMessageMethod.invoke(player, comp);
+                        Logger.logToFileOnly("[Client UI] " + message);
                         return;
                     }
                 } catch (Throwable t) {

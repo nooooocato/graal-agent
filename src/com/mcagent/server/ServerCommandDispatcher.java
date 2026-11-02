@@ -175,15 +175,10 @@ public class ServerCommandDispatcher {
 
     private static int handleReloadExecution(Object context) {
         try {
-            Method getSource = context.getClass().getMethod("getSource");
-            Object source = getSource.invoke(context);
-
             ScriptManager sm = ScriptManager.getInstance();
             if (sm != null) {
                 sm.reload();
             }
-
-            sendFeedback(source, "§a[MC-JS-Agent] 服务端脚本全部重新加载成功！", true);
             return 1;
         } catch (Throwable t) {
             Logger.error("Error executing server /reloadjs command", t);
@@ -230,6 +225,7 @@ public class ServerCommandDispatcher {
             Supplier<?> supplier = () -> comp;
             Method sendSuccess = source.getClass().getMethod("sendSuccess", Supplier.class, boolean.class);
             sendSuccess.invoke(source, supplier, broadcastToOps);
+            Logger.logToFileOnly("[Command Feedback] " + message);
             return;
         } catch (Throwable t) {
             Logger.info(message);

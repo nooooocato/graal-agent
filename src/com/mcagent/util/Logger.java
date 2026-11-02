@@ -62,9 +62,15 @@ public class Logger {
         }
     }
 
+    public static void logToFileOnly(String message) {
+        String formatted = String.format("[%s] %s %s", time(), PREFIX, message);
+        if (fileWriter != null) {
+            fileWriter.println(formatted);
+        }
+    }
+
     public static void info(String message) {
         String formatted = String.format("[%s] %s INFO: %s", time(), PREFIX, message);
-        System.out.println(formatted);
         if (fileWriter != null) {
             fileWriter.println(formatted);
         }
@@ -72,13 +78,14 @@ public class Logger {
         if (log4jInfoMethod != null && log4jLogger != null) {
             try {
                 log4jInfoMethod.invoke(log4jLogger, message);
+                return;
             } catch (Throwable ignored) {}
         }
+        System.out.println(formatted);
     }
 
     public static void warn(String message) {
         String formatted = String.format("[%s] %s WARN: %s", time(), PREFIX, message);
-        System.out.println(formatted);
         if (fileWriter != null) {
             fileWriter.println(formatted);
         }
@@ -86,13 +93,14 @@ public class Logger {
         if (log4jWarnMethod != null && log4jLogger != null) {
             try {
                 log4jWarnMethod.invoke(log4jLogger, message);
+                return;
             } catch (Throwable ignored) {}
         }
+        System.out.println(formatted);
     }
 
     public static void error(String message) {
         String formatted = String.format("[%s] %s ERROR: %s", time(), PREFIX, message);
-        System.err.println(formatted);
         if (fileWriter != null) {
             fileWriter.println(formatted);
         }
@@ -100,16 +108,14 @@ public class Logger {
         if (log4jErrorMethod != null && log4jLogger != null) {
             try {
                 log4jErrorMethod.invoke(log4jLogger, message, null);
+                return;
             } catch (Throwable ignored) {}
         }
+        System.err.println(formatted);
     }
 
     public static void error(String message, Throwable throwable) {
         String formatted = String.format("[%s] %s ERROR: %s", time(), PREFIX, message);
-        System.err.println(formatted);
-        if (throwable != null) {
-            throwable.printStackTrace(System.err);
-        }
         if (fileWriter != null) {
             fileWriter.println(formatted);
             if (throwable != null) {
@@ -120,7 +126,12 @@ public class Logger {
         if (log4jErrorMethod != null && log4jLogger != null) {
             try {
                 log4jErrorMethod.invoke(log4jLogger, message, throwable);
+                return;
             } catch (Throwable ignored) {}
+        }
+        System.err.println(formatted);
+        if (throwable != null) {
+            throwable.printStackTrace(System.err);
         }
     }
 }
