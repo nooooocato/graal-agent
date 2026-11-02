@@ -25,7 +25,7 @@
     - [ ] 编写 `ClientTickPlugin` 转换测试
     - [ ] 编写 `KeyboardHandlerPlugin` 按键阻断与影子透传测试
     - [ ] 编写 `PacketListenerPlugin` 聊天与命令拦截测试
-- [ ] Task: 实现客户端微插件 (Green Phase)
+- [x] Task: 实现客户端微插件 (Green Phase) (420c6e3)
     - [ ] 创建 `com.graalagent.transformer.plugins.ClientTickPlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.KeyboardHandlerPlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.PacketListenerPlugin`
