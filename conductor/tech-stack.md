@@ -19,7 +19,11 @@
 
 ## 3. Bytecode Manipulation & Game Integration
 - **Instrumentation Mechanism:** Java Instrumentation API (`premain` / `agentmain`).
-- **Bytecode Framework:** Native `java.lang.classfile` (Class-File API introduced in modern Java, zero third-party dependencies).
+- **Bytecode Framework:** Native `java.lang.classfile` (Java 25 Class-File API, zero third-party dependencies).
+- **Architecture Pattern:** [[Shadow-Method-Virtualization|Shadow Method Virtualization (SMV)]] & Micro-Plugin Mesh Pipeline:
+  - `MethodVirtualizer`: Method body cloning to `private synthetic $$shadow$<name>`, virtual dispatcher stubs (Prefix, Around, Replace, Postfix) with JIT inlining and stack-map safety.
+  - `SMVOrchestrator`: Hash-routed class transformation pipeline replacing monolithic transformers.
+  - Micro-Plugins: `ClientTickPlugin`, `KeyboardHandlerPlugin`, `PacketListenerPlugin`, `ServerLifecyclePlugin`, `ServerTickPlugin`, `CommandsInitPlugin`, `BundlerPlugin`, `PackRepositoryPlugin`.
 - **Target Platform:** Minecraft 26.3 (Mojang mappings, Client & Dedicated Server).
 - **Command Framework:** Minecraft native Brigadier command dispatcher with `BrigadierAdapter` (Fluent DSL, unified client completion push & server tree registration).
 - **Reflection & Invocation:** `MethodHandleCache` (cached `MethodHandle` resolution and static warmup for high-frequency game methods).
