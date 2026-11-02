@@ -4,10 +4,10 @@
 - [x] Task: Create Unit Tests for Sandboxed File System (`ScriptFileSystemTest`) [4891a19]
     - [x] Write unit tests verifying path traversal prevention (rejecting `../` escapes outside `scripts/`)
     - [x] Write unit tests verifying UTF-8 read/write, directory creation, exists checks, file listing, and deletion
-- [ ] Task: Implement `ScriptFileSystem` and GraalJS Binding
-    - [ ] Implement `com.mcagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
-    - [ ] Expose `agent.fs` in `AgentAPI.java` with idiomatic JS methods
-    - [ ] Run automated tests and confirm passing (Green Phase)
+- [x] Task: Implement `ScriptFileSystem` and GraalJS Binding [1e2623d]
+    - [x] Implement `com.mcagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
+    - [x] Expose `agent.fs` in `AgentAPI.java` with idiomatic JS methods
+    - [x] Run automated tests and confirm passing (Green Phase)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Dual-Environment Runtime Detection & Thread Dispatcher
