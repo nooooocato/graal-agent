@@ -24,7 +24,7 @@
     - [x] 在 `EnvironmentContext` 中用句柄替换裸反射调用
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3: 统一 Brigadier 指令网关 (BrigadierAdapter)
+## Phase 3: 统一 Brigadier 指令网关 (BrigadierAdapter) [checkpoint: c89e21b]
 - [x] Task: 编写 BrigadierAdapter 节点构建与动态代理测试 (Red Phase) dc20295
     - [x] 编写 Fluent DSL 链式构建测试 (字面量、贪婪字符串参数)
     - [x] 编写动态代理回调触发测试
@@ -34,7 +34,7 @@
     - [x] 实现 `syncCommandsToAll(server)` 广播方法
 - [x] Task: 代码去重与收敛 (Refactor Phase) c89e21b
     - [x] 替换 `ServerCommandDispatcher` 与 `ScriptManager` 中的旧版硬编码反射
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 强类型引导配置与依赖加载器 (Bootstrap & Config)
 - [ ] Task: 编写 AgentConfig 与 LibraryInjector 单元测试 (Red Phase)
