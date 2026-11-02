@@ -45,3 +45,6 @@
 - [x] Task: 废弃并移除旧版巨石类 `MinecraftTransformer` (Refactor Phase) (79c0da6)
     - [x] 将 `AgentBootstrap` 中的转换器注册更新为 `SMVOrchestrator`
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (a51a900)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions (27fe1bf)
