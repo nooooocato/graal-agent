@@ -7,7 +7,7 @@
 - [x] Task: 实现 MethodVirtualizer 与分发逻辑 (Green Phase) (4c48161)
     - [ ] 创建 `com.graalagent.transformer.smv.MethodVirtualizer`
     - [ ] 实现针对无参、带参、带返回值方法的通用分发桩生成器
-- [ ] Task: 栈映射表与异常表校验 (Refactor Phase)
+- [x] Task: 栈映射表与异常表校验 (Refactor Phase) (841d6e8)
     - [ ] 验证包含 try-catch 块的方法在虚拟化后字节码校验（Verification）完全合规
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
