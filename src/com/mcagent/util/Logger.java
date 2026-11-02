@@ -19,15 +19,27 @@ public class Logger {
     private static volatile Method log4jErrorMethod = null;
 
     static {
+        initLogFile(new File("agent.log"));
+    }
+
+    public static synchronized void initLogFile(File logFile) {
+        if (logFile == null) {
+            return;
+        }
         try {
-            File logFile = new File("H:\\mc-mod\\mc-agent\\agent.log");
+            if (logFile.getParentFile() != null && !logFile.getParentFile().exists()) {
+                logFile.getParentFile().mkdirs();
+            }
+            if (fileWriter != null) {
+                fileWriter.flush();
+                fileWriter.close();
+            }
             fileWriter = new PrintWriter(
                     new OutputStreamWriter(new FileOutputStream(logFile, true), StandardCharsets.UTF_8),
                     true
             );
-            fileWriter.printf("[%s] %s Logger initialized with UTF-8. File output active.%n", time(), PREFIX);
         } catch (Throwable t) {
-            System.err.println("[MC-JS-Agent] Failed to initialize file logger: " + t.getMessage());
+            System.err.println("[MC-JS-Agent] Failed to initialize file logger at " + logFile.getPath() + ": " + t.getMessage());
         }
     }
 

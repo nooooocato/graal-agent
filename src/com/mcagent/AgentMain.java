@@ -8,6 +8,8 @@ import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.jar.JarFile;
 
 public class AgentMain {
@@ -20,22 +22,25 @@ public class AgentMain {
     }
 
     private static void startAgent(String mode, String agentArgs, Instrumentation inst) {
-        Logger.info("==================================================");
-        Logger.info("Minecraft 26.3 JavaScript Agent starting (" + mode + ")");
-        Logger.info("Java Runtime: " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
-        Logger.info("==================================================");
-
         try {
             // 1. Locate Agent directory
             File agentJar = getAgentJarFile();
             File agentDir = (agentJar != null && agentJar.getParentFile() != null)
-                    ? agentJar.getParentFile()
-                    : new File(".");
+                    ? agentJar.getParentFile().getCanonicalFile()
+                    : new File(".").getCanonicalFile();
 
+            // Initialize logger file relative to agent directory
+            Logger.initLogFile(new File(agentDir, "agent.log"));
+
+            Logger.info("==================================================");
+            Logger.info("Minecraft 26.3 JavaScript Agent starting (" + mode + ")");
+            Logger.info("Java Runtime: " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
             Logger.info("Agent directory: " + agentDir.getAbsolutePath());
+            Logger.info("Working directory: " + new File(".").getAbsolutePath());
+            Logger.info("==================================================");
 
             // 2. Load dependent JARs (GraalJS, Truffle, ICU4J, etc.) into System ClassLoader
-            loadLibraries(agentDir, inst);
+            loadLibraries(agentDir, agentArgs, inst);
 
             // 3. Determine Scripts directory
             File scriptsDir = resolveScriptsDir(agentArgs, agentDir);
@@ -62,22 +67,62 @@ public class AgentMain {
             String decoded = URLDecoder.decode(path, StandardCharsets.UTF_8);
             File f = new File(decoded);
             if (f.exists()) {
-                return f;
+                return f.getCanonicalFile();
             }
         } catch (Throwable ignored) {}
         return null;
     }
 
-    private static void loadLibraries(File agentDir, Instrumentation inst) {
-        File libDir = new File(agentDir, "lib");
-        if (!libDir.exists() || !libDir.isDirectory()) {
-            Logger.warn("No 'lib' directory found at " + libDir.getAbsolutePath() + "; skipping jar appending.");
+    private static void loadLibraries(File agentDir, String agentArgs, Instrumentation inst) {
+        List<File> candidates = new ArrayList<>();
+
+        // 1. Check agentArgs for lib=
+        if (agentArgs != null && !agentArgs.trim().isEmpty()) {
+            for (String part : agentArgs.split(",")) {
+                String clean = part.trim();
+                if (clean.startsWith("lib=")) {
+                    String libPath = clean.substring("lib=".length());
+                    File customLib = new File(libPath);
+                    if (!customLib.isAbsolute()) {
+                        customLib = new File(agentDir, libPath);
+                    }
+                    candidates.add(customLib);
+                }
+            }
+        }
+
+        // 2. Check agentDir/lib
+        candidates.add(new File(agentDir, "lib"));
+
+        // 3. Check ./lib (working directory)
+        candidates.add(new File("lib"));
+
+        // 4. Check parent directory ../lib
+        if (agentDir.getParentFile() != null) {
+            candidates.add(new File(agentDir.getParentFile(), "lib"));
+        }
+
+        File foundLibDir = null;
+        for (File candidate : candidates) {
+            if (candidate.exists() && candidate.isDirectory()) {
+                foundLibDir = candidate;
+                break;
+            }
+        }
+
+        if (foundLibDir == null) {
+            Logger.error("CRITICAL: No 'lib' directory found! Checked locations:");
+            for (File c : candidates) {
+                Logger.error("  - " + c.getAbsolutePath());
+            }
+            Logger.error("Please ensure the 'lib' folder containing GraalJS JARs is placed alongside mc-agent.jar!");
             return;
         }
 
-        File[] jars = libDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+        Logger.info("Loading GraalJS dependencies from: " + foundLibDir.getAbsolutePath());
+        File[] jars = foundLibDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
         if (jars == null || jars.length == 0) {
-            Logger.warn("No JAR files found in " + libDir.getAbsolutePath());
+            Logger.warn("No JAR files found in " + foundLibDir.getAbsolutePath());
             return;
         }
 
@@ -93,18 +138,32 @@ public class AgentMain {
 
     private static File resolveScriptsDir(String agentArgs, File agentDir) {
         if (agentArgs != null && !agentArgs.trim().isEmpty()) {
-            String clean = agentArgs.trim();
-            if (clean.startsWith("scripts=")) {
-                clean = clean.substring("scripts=".length());
+            for (String part : agentArgs.split(",")) {
+                String clean = part.trim();
+                if (clean.startsWith("scripts=")) {
+                    clean = clean.substring("scripts=".length());
+                    File custom = new File(clean);
+                    if (!custom.isAbsolute()) {
+                        custom = new File(agentDir, clean);
+                    }
+                    return custom;
+                }
             }
-            File custom = new File(clean);
-            if (!custom.isAbsolute()) {
-                custom = new File(agentDir, clean);
-            }
-            return custom;
         }
 
-        // Default: agentDir/scripts
-        return new File(agentDir, "scripts");
+        // 1. Try agentDir/scripts
+        File defaultScripts = new File(agentDir, "scripts");
+        if (defaultScripts.exists()) {
+            return defaultScripts;
+        }
+
+        // 2. Try ./scripts in working directory
+        File cwdScripts = new File("scripts");
+        if (cwdScripts.exists()) {
+            return cwdScripts;
+        }
+
+        // Default back to agentDir/scripts
+        return defaultScripts;
     }
 }
