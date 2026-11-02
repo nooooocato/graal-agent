@@ -21,7 +21,7 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (60a16d9)
 
 ## Phase 3: 客户端插件集落地 (Client Plugins)
-- [ ] Task: 编写客户端插件单元测试 (Red Phase)
+- [x] Task: 编写客户端插件单元测试 (Red Phase) (5def619)
     - [ ] 编写 `ClientTickPlugin` 转换测试
     - [ ] 编写 `KeyboardHandlerPlugin` 按键阻断与影子透传测试
     - [ ] 编写 `PacketListenerPlugin` 聊天与命令拦截测试
