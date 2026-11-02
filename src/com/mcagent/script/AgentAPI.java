@@ -54,6 +54,16 @@ public class AgentAPI {
         return scriptsDir.getAbsolutePath();
     }
 
+    public String createDatapack(String id, String description) {
+        try {
+            java.nio.file.Path p = com.mcagent.datapack.DatapackManager.createSyntheticPack(scriptsDir, id, description, 61);
+            return p.toString();
+        } catch (Throwable t) {
+            Logger.error("Failed to create datapack: " + id, t);
+            return null;
+        }
+    }
+
     public boolean isClient() {
         return com.mcagent.bridge.EnvironmentContext.getLiveContext().isClient();
     }

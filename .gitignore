@@ -6,3 +6,4 @@ mc-agent.jar.new
 *.class
 /server/
 server
+/scripts/datapacks/

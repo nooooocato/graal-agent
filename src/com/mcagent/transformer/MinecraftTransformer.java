@@ -46,6 +46,8 @@ public class MinecraftTransformer implements ClassFileTransformer {
                 currentBytes = transformCommands(currentBytes);
             } else if (className.equals("net/minecraft/bundler/Main")) {
                 currentBytes = transformBundlerMain(currentBytes);
+            } else if (className.equals("net/minecraft/server/packs/repository/PackRepository")) {
+                currentBytes = transformPackRepository(currentBytes);
             }
 
             // Custom JavaScript transformers (delegated through ScriptManager's lock)
@@ -331,6 +333,35 @@ public class MinecraftTransformer implements ClassFileTransformer {
                                 && inv.type().stringValue().equals("()Ljava/lang/ClassLoader;")) {
                             Logger.info("Replaced Bundler URLClassLoader parent with AppClassLoader for Agent visibility.");
                             return;
+                        }
+                        cb.with(ce);
+                    }
+                }));
+                return;
+            }
+            builder.with(element);
+        };
+        return classFile.transformClass(cm, ct);
+    }
+
+    private byte[] transformPackRepository(byte[] bytes) {
+        Logger.info("Instrumenting net.minecraft.server.packs.repository.PackRepository (datapack source hook)...");
+        ClassModel cm = classFile.parse(bytes);
+        ClassTransform ct = (builder, element) -> {
+            if (element instanceof MethodModel mm
+                    && mm.methodName().stringValue().equals("<init>")
+                    && mm.methodType().stringValue().equals("([Lnet/minecraft/server/packs/repository/RepositorySource;)V")) {
+                builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
+                    @Override
+                    public void accept(CodeBuilder cb, CodeElement ce) {
+                        if (ce instanceof InvokeInstruction inv
+                                && inv.owner().asInternalName().equals("com/google/common/collect/ImmutableSet")
+                                && inv.name().stringValue().equals("copyOf")) {
+                            cb.invokestatic(
+                                    ClassDesc.of("com.mcagent.datapack.DatapackManager"),
+                                    "injectSources",
+                                    MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)[Ljava/lang/Object;")
+                            );
                         }
                         cb.with(ce);
                     }

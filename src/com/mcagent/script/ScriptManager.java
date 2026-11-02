@@ -35,6 +35,7 @@ public class ScriptManager {
 
     public ScriptManager(File scriptsDir) {
         this.scriptsDir = scriptsDir;
+        com.mcagent.datapack.DatapackManager.setScriptsDir(scriptsDir);
         this.agentAPI = new AgentAPI(scriptsDir, this);
         instance = this;
     }
@@ -209,6 +210,7 @@ public class ScriptManager {
         Logger.info("Reloading JavaScript scripts from " + scriptsDir.getAbsolutePath() + "...");
         initContext();
         loadAllScripts();
+        com.mcagent.datapack.DatapackManager.reloadServerResources();
         AgentBridge.sendChatMessage("§a[MC-JS-Agent] 脚本全部重新加载成功！");
     }
 
