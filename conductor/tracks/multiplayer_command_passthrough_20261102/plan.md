@@ -10,7 +10,7 @@
     - [x] 修复 `EnvironmentContext.broadcastMessage` 中加载 `Component` 的类加载器
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) a2eca4d
 
-## Phase 2: 客户端指令穿透与提示动态同步
+## Phase 2: 客户端指令穿透与提示动态同步 [checkpoint: c1513e7]
 - [x] Task: 编写多人游戏指令穿透与过滤测试 (Red Phase) 51fd487
     - [x] 编写测试验证在多人模式下 `/serverinfo`、`/js`、`/reloadjs` 返回 false（穿透发包）
     - [x] 编写测试验证 `/cjs`、`/clientjs` 在客户端本地拦截并求值
@@ -20,7 +20,7 @@
 - [x] Task: 改造指令提示同步逻辑 (Green Phase) c1513e7
     - [x] 调整 `ClientPacketListener.handleCommands`：多人模式下不注入本地指令，完全跟随服务端网络包
     - [x] 在服务端热重载或指令注册时，调用 `server.getPlayerList().getPlayers().forEach(p -> server.getCommands().sendCommands(p))` 动态推送更新
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) c1513e7
 
 ## Phase 3: 多人环境客户端穿透安全沙箱
 - [ ] Task: 编写客户端玩家执行 JS 的安全沙箱单元测试 (Red Phase)
