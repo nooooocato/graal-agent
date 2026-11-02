@@ -23,11 +23,11 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) c1513e7
 
 ## Phase 3: 多人环境客户端穿透安全沙箱
-- [ ] Task: 编写客户端玩家执行 JS 的安全沙箱单元测试 (Red Phase)
-    - [ ] 编写测试验证玩家执行 `Java.type(...)` 抛出安全异常
-    - [ ] 编写测试验证玩家执行 `agent.fs.writeFile(...)` 抛出权限拒绝
-    - [ ] 编写测试验证控制台来源依然具备完整执行权限
-- [ ] Task: 实现执行来源识别与降权沙箱引擎 (Green Phase)
+- [x] Task: 编写客户端玩家执行 JS 的安全沙箱单元测试 (Red Phase) d654a89
+    - [x] 编写测试验证玩家执行 `Java.type(...)` 抛出安全异常
+    - [x] 编写测试验证玩家执行 `agent.fs.writeFile(...)` 抛出权限拒绝
+    - [x] 编写测试验证控制台来源依然具备完整执行权限
+- [~] Task: 实现执行来源识别与降权沙箱引擎 (Green Phase)
     - [ ] 在 `ServerCommandDispatcher` 中区分指令来源（控制台 vs 游戏内玩家）
     - [ ] 在 `ScriptManager` 中为玩家穿透执行提供受限环境（屏蔽 `Java` 全局对象，禁用写文件操作）
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
