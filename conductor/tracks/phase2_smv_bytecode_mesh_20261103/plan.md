@@ -9,7 +9,7 @@
     - [ ] 实现针对无参、带参、带返回值方法的通用分发桩生成器
 - [x] Task: 栈映射表与异常表校验 (Refactor Phase) (841d6e8)
     - [ ] 验证包含 try-catch 块的方法在虚拟化后字节码校验（Verification）完全合规
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (8411874)
 
 ## Phase 2: 插件契约与调度器 (Pipeline Infrastructure)
 - [ ] Task: 编写 ClassTransformPlugin 与 SMVOrchestrator 单元测试 (Red Phase)
