@@ -66,4 +66,28 @@ public class MethodHandleCacheTest {
             Assert.assertEquals("Hello, user" + i + " (initial)", res);
         }
     }
+
+    public void testGraalJsBenchmarkSimulation() {
+        org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder("js")
+                .allowHostAccess(org.graalvm.polyglot.HostAccess.ALL)
+                .allowHostClassLookup(c -> true)
+                .build();
+        try {
+            context.eval("js", """
+                const MethodHandleCache = Java.type("com.graalagent.bridge.MethodHandleCache");
+                const MethodType = Java.type("java.lang.invoke.MethodType");
+                const StringClass = Java.type("java.lang.String").class;
+                const ObjectClass = Java.type("java.lang.Object").class;
+
+                const valueOfMethod = StringClass.getMethod("valueOf", ObjectClass);
+                const reflectRes = valueOfMethod.invoke(null, "123");
+
+                const mhType = MethodType.methodType(StringClass, ObjectClass);
+                const mh = MethodHandleCache.findStatic(StringClass, "valueOf", mhType);
+                const mhRes = mh.invokeWithArguments("123");
+            """);
+        } finally {
+            context.close();
+        }
+    }
 }
