@@ -86,4 +86,50 @@ public class ServerCommandTest {
         Assert.assertEquals(1, res2);
         Assert.assertEquals("v2:reloaded", sm.evalInline("globalThis.fstestValue"));
     }
+
+    public static class MockPlayer {
+        public String getScoreboardName() {
+            return "TestPlayer42";
+        }
+    }
+
+    public static class MockPlayerSource {
+        private final MockPlayer player = new MockPlayer();
+        public MockPlayer getPlayer() {
+            return player;
+        }
+    }
+
+    public void testConsoleCommandAccessingNullPlayerThrowsError() throws Exception {
+        Path tempDir = Files.createTempDirectory("mcagent-player-err-test-");
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        sm.evalInline("agent.registerCommand('mypos', function(args) { if (player) { return 'has player'; } });");
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        // Console source has null player
+        Object consoleSource = new Object();
+        int res = dispatcher.execute("mypos", consoleSource);
+        // Should return 0 due to missing player error reported
+        Assert.assertEquals(0, res);
+    }
+
+    public void testPlayerCommandAccessingPlayerSucceeds() throws Exception {
+        Path tempDir = Files.createTempDirectory("mcagent-player-ok-test-");
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        sm.evalInline("globalThis.capturedPlayerName = null; agent.registerCommand('myname', function(args, p) { if (player) { globalThis.capturedPlayerName = player.getScoreboardName(); } });");
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        MockPlayerSource playerSource = new MockPlayerSource();
+        int res = dispatcher.execute("myname", playerSource);
+        Assert.assertEquals(1, res);
+        Assert.assertEquals("TestPlayer42", sm.evalInline("globalThis.capturedPlayerName"));
+    }
 }

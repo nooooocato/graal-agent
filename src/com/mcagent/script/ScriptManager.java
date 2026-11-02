@@ -30,6 +30,9 @@ import java.util.function.Supplier;
 public class ScriptManager {
     private static volatile ScriptManager instance;
 
+    private static final ThreadLocal<Object> currentCommandPlayer = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> commandExecutingFromConsole = new ThreadLocal<>();
+
     private final File scriptsDir;
     private final EventBus eventBus = new EventBus();
     private final AgentAPI agentAPI;
@@ -59,6 +62,25 @@ public class ScriptManager {
         }
     }
 
+    public static void setCommandExecutionContext(Object player, boolean isConsole) {
+        currentCommandPlayer.set(player);
+        commandExecutingFromConsole.set(isConsole);
+    }
+
+    public static Object getCurrentCommandPlayer() {
+        return currentCommandPlayer.get();
+    }
+
+    public static boolean isCommandExecutingFromConsole() {
+        Boolean b = commandExecutingFromConsole.get();
+        return b != null && b;
+    }
+
+    public static void clearCommandExecutionContext() {
+        currentCommandPlayer.remove();
+        commandExecutingFromConsole.remove();
+    }
+
     public void start() {
         if (!scriptsDir.exists()) {
             scriptsDir.mkdirs();
@@ -79,7 +101,7 @@ public class ScriptManager {
         if (name != null && callback != null && callback.canExecute()) {
             String cleanName = name.startsWith("/") ? name.substring(1) : name;
             customCommands.put(cleanName.toLowerCase(), callback);
-            Logger.info("Registered custom client command: /" + cleanName);
+            Logger.info("Registered custom command: /" + cleanName);
             if (lastDispatcher != null) {
                 registerCommandToBrigadier(lastDispatcher, cleanName);
             }
@@ -152,6 +174,8 @@ public class ScriptManager {
         bindings.putMember("events", eventBus);
         bindings.putMember("__getMinecraft", (Supplier<Object>) AgentBridge::getMinecraft);
         bindings.putMember("__getMinecraftServer", (Supplier<Object>) AgentBridge::getServer);
+        bindings.putMember("__getCommandPlayer", (Supplier<Object>) ScriptManager::getCurrentCommandPlayer);
+        bindings.putMember("__isConsoleCommand", (Supplier<Boolean>) ScriptManager::isCommandExecutingFromConsole);
 
         // Define standard browser/Node utilities and dynamic MC globals
         context.eval("js", """
@@ -178,25 +202,41 @@ public class ScriptManager {
 
             Object.defineProperty(globalThis, 'player', {
                 get: () => {
+                    const cmdPlayer = __getCommandPlayer();
+                    if (cmdPlayer) return cmdPlayer;
                     const m = __getMinecraft();
-                    return m ? m.player : null;
+                    if (m && m.player) return m.player;
+                    if (__isConsoleCommand()) {
+                        throw new Error("缺少玩家实体参数 (player is null): 控制台无法执行需要玩家上下文的操作");
+                    }
+                    return null;
                 },
                 configurable: true
             });
 
             Object.defineProperty(globalThis, 'world', {
                 get: () => {
+                    const cmdPlayer = __getCommandPlayer();
+                    if (cmdPlayer && cmdPlayer.level) {
+                        try {
+                            return typeof cmdPlayer.level === 'function' ? cmdPlayer.level() : cmdPlayer.level;
+                        } catch (e) {}
+                    }
                     const m = __getMinecraft();
-                    return m ? m.level : null;
+                    if (m && m.level) return m.level;
+                    const s = __getMinecraftServer();
+                    if (s && s.overworld) {
+                        try {
+                            return typeof s.overworld === 'function' ? s.overworld() : s.overworld;
+                        } catch (e) {}
+                    }
+                    return null;
                 },
                 configurable: true
             });
 
             Object.defineProperty(globalThis, 'level', {
-                get: () => {
-                    const m = __getMinecraft();
-                    return m ? m.level : null;
-                },
+                get: () => globalThis.world,
                 configurable: true
             });
 
@@ -380,71 +420,85 @@ public class ScriptManager {
         if (dispatcher == null) return;
         this.lastDispatcher = dispatcher;
 
-        registerCommandToBrigadier(dispatcher, "js");
-        registerCommandToBrigadier(dispatcher, "reloadjs");
-        registerCommandToBrigadier(dispatcher, "jsreload");
-
-        for (String customCmd : customCommands.keySet()) {
-            registerCommandToBrigadier(dispatcher, customCmd);
+        try {
+            for (String cmdName : customCommands.keySet()) {
+                registerCommandToBrigadier(dispatcher, cmdName);
+            }
+        } catch (Throwable t) {
+            Logger.error("Failed to register custom commands to client Brigadier dispatcher", t);
         }
-
-        Logger.info("Brigadier command pipeline updated with /js, /reloadjs.");
     }
 
     private void registerCommandToBrigadier(Object dispatcher, String cmdName) {
         try {
-            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder");
-            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType");
-            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder");
+            ClassLoader cl = dispatcher.getClass().getClassLoader();
+            if (cl == null) {
+                cl = ClassLoader.getSystemClassLoader();
+            }
+
+            Class<?> literalBuilderClass = Class.forName("com.mojang.brigadier.builder.LiteralArgumentBuilder", true, cl);
+            Class<?> argumentsClass = Class.forName("com.mojang.brigadier.arguments.StringArgumentType", true, cl);
+            Class<?> requiredBuilderClass = Class.forName("com.mojang.brigadier.builder.RequiredArgumentBuilder", true, cl);
+            Class<?> commandClass = Class.forName("com.mojang.brigadier.Command", true, cl);
+            Class<?> argumentTypeClass = Class.forName("com.mojang.brigadier.arguments.ArgumentType", true, cl);
+            Class<?> argumentBuilderClass = Class.forName("com.mojang.brigadier.builder.ArgumentBuilder", true, cl);
 
             Method literalMethod = literalBuilderClass.getMethod("literal", String.class);
             Method greedyStringMethod = argumentsClass.getMethod("greedyString");
-            Method argumentMethod = requiredBuilderClass.getMethod("argument", String.class, Class.forName("com.mojang.brigadier.arguments.ArgumentType"));
-            Method thenMethod = literalBuilderClass.getMethod("then", Class.forName("com.mojang.brigadier.builder.ArgumentBuilder"));
+            Method argumentMethod = requiredBuilderClass.getMethod("argument", String.class, argumentTypeClass);
+            Method thenMethod = literalBuilderClass.getMethod("then", argumentBuilderClass);
+            Method executesRequired = requiredBuilderClass.getMethod("executes", commandClass);
             Method registerMethod = dispatcher.getClass().getMethod("register", literalBuilderClass);
 
             Object literal = literalMethod.invoke(null, cmdName);
             Object greedyArg = greedyStringMethod.invoke(null);
             Object codeArg = argumentMethod.invoke(null, "args", greedyArg);
-            thenMethod.invoke(literal, codeArg);
 
+            Object dummyCommand = java.lang.reflect.Proxy.newProxyInstance(
+                    cl,
+                    new Class<?>[]{commandClass},
+                    (proxy, method, args) -> 1
+            );
+
+            executesRequired.invoke(codeArg, dummyCommand);
+            thenMethod.invoke(literal, codeArg);
             registerMethod.invoke(dispatcher, literal);
         } catch (Throwable t) {
-            Logger.warn("Notice: Brigadier auto-suggestion for /" + cmdName + " registration bypassed: " + t.getMessage());
+            Logger.error("Failed to inject /" + cmdName + " into client dispatcher", t);
         }
     }
 
     private void startWatcher() {
-        watcherThread = new Thread(() -> {
-            try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-                Path path = scriptsDir.toPath();
-                path.register(watchService,
-                        StandardWatchEventKinds.ENTRY_CREATE,
-                        StandardWatchEventKinds.ENTRY_MODIFY,
-                        StandardWatchEventKinds.ENTRY_DELETE);
+        if (watcherThread != null && watcherThread.isAlive()) {
+            return;
+        }
 
+        watcherThread = new Thread(() -> {
+            try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
+                Path path = scriptsDir.toPath();
+                path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
                 Logger.info("Started hot-reload watcher on " + scriptsDir.getAbsolutePath());
 
                 while (running.get()) {
                     WatchKey key;
                     try {
-                        key = watchService.take();
+                        key = watcher.take();
                     } catch (InterruptedException e) {
                         break;
                     }
 
-                    boolean shouldReload = false;
+                    boolean changed = false;
                     for (WatchEvent<?> event : key.pollEvents()) {
-                        Path changed = (Path) event.context();
-                        if (changed.toString().endsWith(".js")) {
-                            Logger.info("Detected change in " + changed + " (" + event.kind().name() + ")");
-                            shouldReload = true;
+                        Path changedPath = (Path) event.context();
+                        if (changedPath.toString().endsWith(".js")) {
+                            Logger.info("Detected change in " + changedPath + " (" + event.kind().name() + ")");
+                            changed = true;
                         }
                     }
 
-                    if (shouldReload) {
+                    if (changed) {
                         try {
-                            Thread.sleep(250);
+                            Thread.sleep(100);
                         } catch (InterruptedException ignored) {}
                         reload();
                     }
@@ -454,10 +508,24 @@ public class ScriptManager {
                     }
                 }
             } catch (IOException e) {
-                Logger.error("Script directory watcher failed", e);
+                Logger.error("File watcher stopped unexpectedly", e);
             }
         }, "mc-agent-watcher");
+
         watcherThread.setDaemon(true);
         watcherThread.start();
+    }
+
+    public void stop() {
+        running.set(false);
+        if (watcherThread != null) {
+            watcherThread.interrupt();
+        }
+        agentAPI.shutdown();
+        if (context != null) {
+            try {
+                context.close(true);
+            } catch (Throwable ignored) {}
+        }
     }
 }

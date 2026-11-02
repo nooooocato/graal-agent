@@ -187,6 +187,13 @@ public class ServerCommandDispatcher {
     }
 
     private static int handleCustomExecution(Object context, String cmdName) {
+        Method getSource = null;
+        Object source = null;
+        try {
+            getSource = context.getClass().getMethod("getSource");
+            source = getSource.invoke(context);
+        } catch (Throwable ignored) {}
+
         try {
             Method getArgument = context.getClass().getMethod("getArgument", String.class, Class.class);
             String argsStr = "";
@@ -194,15 +201,36 @@ public class ServerCommandDispatcher {
                 argsStr = (String) getArgument.invoke(context, "args", String.class);
             } catch (Throwable ignored) {}
 
+            Object player = null;
+            boolean isConsole = true;
+            if (source != null) {
+                try {
+                    Method getPlayer = source.getClass().getMethod("getPlayer");
+                    player = getPlayer.invoke(source);
+                    if (player != null) {
+                        isConsole = false;
+                    }
+                } catch (Throwable ignored) {}
+            }
+
             ScriptManager sm = ScriptManager.getInstance();
             Value callback = sm != null ? sm.getCustomCommands().get(cmdName) : null;
 
             if (callback != null && callback.canExecute()) {
-                callback.execute(argsStr);
+                try {
+                    ScriptManager.setCommandExecutionContext(player, isConsole);
+                    callback.execute(argsStr, player, source);
+                } finally {
+                    ScriptManager.clearCommandExecutionContext();
+                }
+            } else {
+                sendFeedback(source, "§c[指令错误] 未找到指令 /" + cmdName + " 的回调函数！", false);
             }
             return 1;
         } catch (Throwable t) {
-            Logger.error("Error executing server custom command callback", t);
+            String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
+            Logger.error("指令 /" + cmdName + " 执行报错: " + errorMsg, t);
+            sendFeedback(source, "§c[指令报错] /" + cmdName + ": " + errorMsg, false);
             return 0;
         }
     }
