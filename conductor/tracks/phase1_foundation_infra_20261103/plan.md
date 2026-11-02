@@ -13,14 +13,14 @@
     - [x] 确保测试覆盖率超过 80%
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2: 反射句柄高速缓存池 (MethodHandleCache) [checkpoint: 7ce7183]
+## Phase 2: 反射句柄高速缓存池 (MethodHandleCache) [checkpoint: e4115c4]
 - [x] Task: 编写 MethodHandleCache 单元测试 (Red Phase) 4ffe3f9
     - [x] 编写针对类方法动态预解析与缓存命中率测试
     - [x] 编写基于句柄的 invokeExact 调用性能测试
 - [x] Task: 实现 MethodHandleCache 与预热逻辑 (Green Phase) 1d9e596
     - [x] 创建 `com.graalagent.bridge.MethodHandleCache`
     - [x] 建立针对 `Component.literal`、`isSameThread`、`execute` 的预热方法
-- [x] Task: 整合与回退测试 (Refactor Phase) 7ce7183
+- [x] Task: 整合与回退测试 (Refactor Phase) e4115c4
     - [x] 在 `EnvironmentContext` 中用句柄替换裸反射调用
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
@@ -32,8 +32,8 @@
     - [x] 创建 `com.graalagent.bridge.brigadier.BrigadierAdapter`
     - [x] 实现 `NodeBuilder` 与统一反射 Proxy 绑定
     - [x] 实现 `syncCommandsToAll(server)` 广播方法
-- [ ] Task: 代码去重与收敛 (Refactor Phase)
-    - [ ] 替换 `ServerCommandDispatcher` 与 `ScriptManager` 中的旧版硬编码反射
+- [x] Task: 代码去重与收敛 (Refactor Phase) c89e21b
+    - [x] 替换 `ServerCommandDispatcher` 与 `ScriptManager` 中的旧版硬编码反射
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 强类型引导配置与依赖加载器 (Bootstrap & Config)
