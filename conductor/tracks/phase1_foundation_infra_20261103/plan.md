@@ -8,9 +8,9 @@
     - [x] 创建 `com.graalagent.diagnostics.DiagnosticsHub` 与日志级别枚举
     - [x] 实现动态探测绑定 Log4j 2 的适配逻辑
     - [x] 实现 `com.graalagent.diagnostics.CrashDumpRecorder` 环境与栈快照抓取
-- [ ] Task: 重构与覆盖率校验 (Refactor Phase)
-    - [ ] 统一现有旧 `Logger` 的方法委托至 `DiagnosticsHub`
-    - [ ] 确保测试覆盖率超过 80%
+- [x] Task: 重构与覆盖率校验 (Refactor Phase) d53a101
+    - [x] 统一现有旧 `Logger` 的方法委托至 `DiagnosticsHub`
+    - [x] 确保测试覆盖率超过 80%
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 反射句柄高速缓存池 (MethodHandleCache)
