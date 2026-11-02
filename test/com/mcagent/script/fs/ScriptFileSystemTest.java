@@ -105,10 +105,23 @@ public class ScriptFileSystemTest {
                 .build();
         context.getBindings("js").putMember("agentFs", fs);
 
+        // Test with 3 args
         context.eval("js", "agentFs.writeFile('js_output.txt', 'Hello from GraalJS!', 'utf-8');");
-
         Assert.assertTrue(fs.exists("js_output.txt"), "File written via GraalJS should exist");
         Assert.assertEquals("Hello from GraalJS!", fs.readFile("js_output.txt", "utf-8"));
+
+        // Test with optional encoding (2 args for writeFile, 1 arg for readFile)
+        context.eval("js", "agentFs.writeFile('js_default.txt', 'Default encoding works');");
+        Assert.assertTrue(fs.exists("js_default.txt"), "File written with default encoding should exist");
+        org.graalvm.polyglot.Value res = context.eval("js", "agentFs.readFile('js_default.txt');");
+        Assert.assertEquals("Default encoding works", res.asString());
+
+        // Test list() with 0 args and with '.'
+        org.graalvm.polyglot.Value list0 = context.eval("js", "agentFs.list();");
+        Assert.assertTrue(list0.hasArrayElements() && list0.getArraySize() > 0, "list() should return elements");
+        org.graalvm.polyglot.Value listDot = context.eval("js", "agentFs.list('.');");
+        Assert.assertTrue(listDot.hasArrayElements() && listDot.getArraySize() > 0, "list('.') should return elements");
+
         context.close();
     }
 }

@@ -51,6 +51,10 @@ public class ScriptFileSystem {
         return candidate;
     }
 
+    public String readFile(String relativePath) {
+        return readFile(relativePath, "utf-8");
+    }
+
     public String readFile(String relativePath, String encoding) {
         Path target = resolvePath(relativePath);
         Charset charset = resolveCharset(encoding);
@@ -70,6 +74,10 @@ public class ScriptFileSystem {
             Logger.error("Failed to read bytes: " + relativePath, e);
             throw new RuntimeException("Could not read bytes: " + relativePath, e);
         }
+    }
+
+    public void writeFile(String relativePath, String content) {
+        writeFile(relativePath, content, "utf-8");
     }
 
     public void writeFile(String relativePath, String content, String encoding) {
@@ -150,6 +158,10 @@ public class ScriptFileSystem {
             Logger.error("Failed to create directory: " + relativePath, e);
             return false;
         }
+    }
+
+    public String[] list() {
+        return list("");
     }
 
     public String[] list(String relativePath) {
