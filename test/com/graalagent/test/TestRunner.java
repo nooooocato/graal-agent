@@ -37,6 +37,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.transformer.smv.MethodVirtualizerTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.SMVOrchestratorTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ClientPluginsTest");
+            addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ServerAndSystemPluginsTest");
         }
 
         int total = 0;
