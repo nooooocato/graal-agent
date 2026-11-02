@@ -13,7 +13,7 @@
     - [x] 确保测试覆盖率超过 80%
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2: 反射句柄高速缓存池 (MethodHandleCache)
+## Phase 2: 反射句柄高速缓存池 (MethodHandleCache) [checkpoint: 7ce7183]
 - [x] Task: 编写 MethodHandleCache 单元测试 (Red Phase) 4ffe3f9
     - [x] 编写针对类方法动态预解析与缓存命中率测试
     - [x] 编写基于句柄的 invokeExact 调用性能测试
@@ -22,7 +22,7 @@
     - [x] 建立针对 `Component.literal`、`isSameThread`、`execute` 的预热方法
 - [x] Task: 整合与回退测试 (Refactor Phase) 7ce7183
     - [x] 在 `EnvironmentContext` 中用句柄替换裸反射调用
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 统一 Brigadier 指令网关 (BrigadierAdapter)
 - [ ] Task: 编写 BrigadierAdapter 节点构建与动态代理测试 (Red Phase)
