@@ -232,7 +232,7 @@ public class MethodVirtualizerTest {
         Assert.assertEquals("Caught: NumberFormatException", errResult);
     }
 
-    private static class DynamicClassLoader extends ClassLoader {
+    public static class DynamicClassLoader extends ClassLoader {
         public DynamicClassLoader() {
             super(MethodVirtualizerTest.class.getClassLoader());
         }
