@@ -1,7 +1,7 @@
 # Specification: Server Support & Scripts File I/O (`server_support_file_io`)
 
 ## 1. Overview
-This track transforms `mc-agent` from a client-centric agent into a robust, dual-environment (Client & Dedicated Server) lightweight Mod API. It introduces automatic server environment detection, safe main-thread execution dispatching on both client and server, a sandboxed JavaScript File I/O API (`agent.fs`) scoped to `scripts/`, and dynamic `PackRepository` injection enabling scripts to synthesize and mount custom datapacks for unmodified vanilla clients.
+This track transforms `graal-agent` from a client-centric agent into a robust, dual-environment (Client & Dedicated Server) lightweight Mod API. It introduces automatic server environment detection, safe main-thread execution dispatching on both client and server, a sandboxed JavaScript File I/O API (`agent.fs`) scoped to `scripts/`, and dynamic `PackRepository` injection enabling scripts to synthesize and mount custom datapacks for unmodified vanilla clients.
 
 ## 2. Functional Requirements
 
@@ -40,7 +40,7 @@ This track transforms `mc-agent` from a client-centric agent into a robust, dual
 - **Zero Third-Party Dependencies:** Utilize only JDK 25 standard APIs and GraalJS dependencies already present in `lib/`.
 
 ## 4. Acceptance Criteria
-1. Dedicated Server boots with `-javaagent:mc-agent.jar` cleanly without ClassNotFound errors or thread assertion failures.
+1. Dedicated Server boots with `-javaagent:graal-agent.jar` cleanly without ClassNotFound errors or thread assertion failures.
 2. Server console and in-game operators can execute `/js <code...>` and `/reloadjs`.
 3. JS scripts can read, write, and create directories within `scripts/`, but are prohibited from escaping outside `scripts/`.
 4. Datapacks generated or placed in `scripts/datapacks/` are automatically mounted by the server, allowing unmodified vanilla clients to experience custom recipes/tags.

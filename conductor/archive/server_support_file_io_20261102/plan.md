@@ -5,7 +5,7 @@
     - [x] Write unit tests verifying path traversal prevention (rejecting `../` escapes outside `scripts/`)
     - [x] Write unit tests verifying UTF-8 read/write, directory creation, exists checks, file listing, and deletion
 - [x] Task: Implement `ScriptFileSystem` and GraalJS Binding [1e2623d]
-    - [x] Implement `com.mcagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
+    - [x] Implement `com.graalagent.script.fs.ScriptFileSystem` (<600 lines) with strict canonical path checking
     - [x] Expose `agent.fs` in `AgentAPI.java` with idiomatic JS methods
     - [x] Run automated tests and confirm passing (Green Phase)
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [d237727]
@@ -15,7 +15,7 @@
     - [x] Write tests verifying client vs dedicated server environment detection
     - [x] Write tests verifying thread dispatch routing
 - [x] Task: Refactor and Implement Environment Bridge [dc8bc90]
-    - [x] Create `com.mcagent.bridge.EnvironmentContext` supporting Client (`Minecraft`) and Server (`MinecraftServer`)
+    - [x] Create `com.graalagent.bridge.EnvironmentContext` supporting Client (`Minecraft`) and Server (`MinecraftServer`)
     - [x] Implement thread-safe execution dispatching via `MinecraftServer.execute(...)` on server instances
     - [x] Update `MinecraftTransformer` to instrument `MinecraftServer` initialization and lifecycle
     - [x] Run automated tests and verify build with `build.ps1`
