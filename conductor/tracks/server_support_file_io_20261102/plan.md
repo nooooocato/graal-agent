@@ -38,3 +38,6 @@
     - [x] Wire `/reloadjs` to invoke `MinecraftServer.reloadResources(...)`
     - [x] Provide sample script synthesizing a custom datapack recipe
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [a8aafa4]
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [2eddfa2]
