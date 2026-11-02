@@ -87,8 +87,15 @@ public class DiagnosticsHub {
 
     public String formatFile(LogLevel level, String message, LocalTime time) {
         String t = (time != null ? time : LocalTime.now()).format(TIME_FMT);
-        String lvlName = level != null ? level.name() : "INFO";
+        if (level == null) {
+            return String.format("[%s] %s %s", t, PREFIX, message);
+        }
+        String lvlName = level.name();
         return String.format("[%s] %s %s: %s", t, PREFIX, lvlName, message);
+    }
+
+    public void logToFileOnly(String message) {
+        logQueue.offer(new WriteLogEntry(null, message, null, LocalTime.now()));
     }
 
     public void log(LogLevel level, String message, Throwable t) {

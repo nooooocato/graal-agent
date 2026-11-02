@@ -89,4 +89,41 @@ public class DiagnosticsTest {
         Assert.assertTrue(content.contains("Simulated bytecode fault"), "Exception message missing");
         Assert.assertTrue(content.contains("magic_system (v1.0.0)"), "State dump missing");
     }
+
+    public void testLoggerDelegation() throws Exception {
+        File tempFile = File.createTempFile("logger-delegation-", ".log");
+        tempFile.deleteOnExit();
+
+        com.graalagent.util.Logger.initLogFile(tempFile);
+        com.graalagent.util.Logger.info("Logger info test");
+        com.graalagent.util.Logger.warn("Logger warn test");
+        com.graalagent.util.Logger.error("Logger error test");
+        com.graalagent.util.Logger.logToFileOnly("File only test message");
+        com.graalagent.util.Logger.flush();
+
+        List<String> lines = Files.readAllLines(tempFile.toPath(), StandardCharsets.UTF_8);
+        Assert.assertTrue(lines.size() >= 4, "Should have at least 4 logged lines");
+        Assert.assertTrue(lines.stream().anyMatch(l -> l.contains("INFO: Logger info test")), "Missing info log");
+        Assert.assertTrue(lines.stream().anyMatch(l -> l.contains("WARN: Logger warn test")), "Missing warn log");
+        Assert.assertTrue(lines.stream().anyMatch(l -> l.contains("ERROR: Logger error test")), "Missing error log");
+        Assert.assertTrue(lines.stream().anyMatch(l -> l.contains("File only test message")), "Missing file-only log");
+    }
+
+    public void testCrashDumpNullAndEdgeCases() {
+        CrashDumpRecorder recorder = new CrashDumpRecorder();
+        String formatted = recorder.formatDump(null, null, null);
+        Assert.assertTrue(formatted.contains("No exception provided"), "Should handle null exception gracefully");
+        Assert.assertTrue(formatted.contains("Runtime Environment"), "Should contain runtime info");
+    }
+
+    public void testDiagnosticsHubLevelFilteringAndAudit() {
+        DiagnosticsHub hub = new DiagnosticsHub();
+        hub.setMinLevel(LogLevel.ERROR);
+        // Debug and audit below error
+        hub.debug("Should be skipped");
+        hub.info("Should be skipped");
+        hub.warn("Should be skipped");
+        hub.audit("Should be skipped");
+        hub.error("Should be processed", new RuntimeException("Test error"));
+    }
 }
