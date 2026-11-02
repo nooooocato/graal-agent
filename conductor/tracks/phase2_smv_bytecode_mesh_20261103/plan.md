@@ -36,7 +36,7 @@
     - [ ] 编写 `ServerLifecyclePlugin` 与 `ServerTickPlugin` 测试
     - [ ] 编写 `CommandsInitPlugin` 测试
     - [ ] 编写 `BundlerPlugin` 与 `PackRepositoryPlugin` 测试
-- [ ] Task: 实现服务端与系统微插件 (Green Phase)
+- [x] Task: 实现服务端与系统微插件 (Green Phase) (abd23aa)
     - [ ] 创建 `com.graalagent.transformer.plugins.ServerLifecyclePlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.ServerTickPlugin`
     - [ ] 创建 `com.graalagent.transformer.plugins.CommandsInitPlugin`
