@@ -8,9 +8,9 @@
     - [x] 在 `AgentMain.java` 中接入 `AgentConfig.parse` 并动态配置 `DiagnosticsHub` 级别与日志文件
     - [x] 在 `AgentMain.java` 中接入 `LibraryInjector.injectLibraries` 与依赖门禁探测
     - [x] 在 `AgentMain.java` 顶层 catch 块及全局 `Thread.setDefaultUncaughtExceptionHandler` 中挂载 `CrashDumpRecorder`
-- [ ] Task: 清理遗留私有方法与回归验证 (Refactor Phase)
-    - [ ] 移除 `AgentMain.java` 中废弃的 `loadLibraries`、`resolveScriptsDir` 等私有方法，削减冗余代码
-    - [ ] 运行 `run-tests.ps1` 验证引导测试通过
+- [x] 3f8b810 Task: 清理遗留私有方法与回归验证 (Refactor Phase)
+    - [x] 移除 `AgentMain.java` 中废弃的 `loadLibraries`、`resolveScriptsDir` 等私有方法，削减冗余代码
+    - [x] 运行 `run-tests.ps1` 验证引导测试通过
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 桥接层反射清零与句柄池双阶段预热 (AgentBridge MH Convergence & Dual-Phase Warmup)
