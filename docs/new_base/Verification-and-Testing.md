@@ -93,13 +93,13 @@ flowchart TD
 | **`DiagnosticsTest`** | `testLogLevelFiltering` | 验证最小日志级别阈值生效，低于设定级别的日志直接被拦截丢弃 | ✅ Pass |
 | | `testAnsiColorFormatting` | 验证控制台着色转义序列（如青色 DEBUG、绿色 INFO、红色 ERROR）及时间戳 | ✅ Pass |
 | | `testAsyncFileLogging` | 验证多线程并发下日志任务安全入队，后台守护线程异步写入 UTF-8 文件且 `flush` 行数完整 | ✅ Pass |
-| | `testCrashDumpFormattingAndFileCreation` | 验证系统崩溃转储模板解析与实际 `.dump` 物理快照文件的生成与内容有效性 | ✅ Pass |
-| **`MethodHandleCacheTest`** | `testFindVirtualAndStatic` | 验证虚拟方法与静态方法句柄的反射解包查找与并发哈希缓存有效性 | ✅ Pass |
-| | `testCacheHitPerformance` | 验证重复查询命中缓存且通过 `MethodHandle` 调用耗时大幅优于原生反射 | ✅ Pass |
-| | `testWarmupMechanism` | 验证启动阶段预热核心句柄能够平滑载入，遇未加载类时安全降级不阻断 | ✅ Pass |
-| **`BrigadierAdapterTest`** | `testLiteralNodeBuilder` | 验证 Fluent DSL 链式组装与字面量节点生成，状态码正确传递 | ✅ Pass |
-| | `testGreedyArgumentNode` | 验证贪婪参数子节点的挂载与动态参数解包逻辑 | ✅ Pass |
-| | `testDynamicProxyDispatch` | 验证动态代理 `Command.run()` 的回调触发与返回值解包传递 | ✅ Pass |
+| | `testCrashDumpRecorderGeneration` | 验证系统崩溃转储模板解析与实际 `.dump` 物理快照文件的生成与内容有效性 | ✅ Pass |
+| **`MethodHandleCacheTest`** | `testDynamicResolutionAndCacheHit` | 验证虚拟方法与静态方法句柄的动态解析、缓存命中与调用正确性 | ✅ Pass |
+| | `testWarmup` | 验证启动阶段预热核心句柄载入至缓存池 | ✅ Pass |
+| | `testInvocationCorrectnessUnderLoop` | 验证循环高频调用下的句柄稳定性与正确性 | ✅ Pass |
+| **`BrigadierAdapterTest`** | `testLiteralNodeRegistrationAndExecution` | 验证 Fluent DSL 链式组装与字面量节点生成，回调触发与状态码正确传递 | ✅ Pass |
+| | `testGreedyArgumentNodeRegistrationAndExecution` | 验证贪婪参数子节点的挂载与动态参数捕获解析逻辑 | ✅ Pass |
+| | `testDualExecutionLiteralAndGreedy` | 验证字面量无参模式与贪婪参数分支双重执行兼容性 | ✅ Pass |
 
 ---
 
@@ -130,7 +130,7 @@ flowchart TD
 
 ## 🗑️ 历史技术债务的彻底废弃与移除
 
-在 Phase 2 的最后重构阶段，原有的旧版 402 行单体类 `MinecraftTransformer.java`（已于 commit `79c0da6` 全量删除，-402 lines）：
+在 Phase 2 的最后重构阶段，原有的旧版 402 行单体类 `MinecraftTransformer.java`（已于 commit `b4934c2` 全量删除，-402 lines）：
 - 消除原有单类中维护的大量 `if-else` 级联；
 - 消除直接在原方法体内手动拼接操作码指令的潜在隐患；
 - 系统引导入口 [`AgentMain.java`](../../src/com/graalagent/AgentMain.java) 全面换装为微内核插件流水线 `SMVOrchestrator.createDefault()`。

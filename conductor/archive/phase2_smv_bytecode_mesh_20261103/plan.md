@@ -42,7 +42,7 @@
     - [x] 创建 `com.graalagent.transformer.plugins.CommandsInitPlugin`
     - [x] 创建 `com.graalagent.transformer.plugins.BundlerPlugin`
     - [x] 创建 `com.graalagent.transformer.plugins.PackRepositoryPlugin`
-- [x] Task: 废弃并移除旧版巨石类 `MinecraftTransformer` (Refactor Phase) (79c0da6)
+- [x] Task: 废弃并移除旧版巨石类 `MinecraftTransformer` (Refactor Phase) (b4934c2)
     - [x] 将 `AgentBootstrap` 中的转换器注册更新为 `SMVOrchestrator`
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (a51a900)
 

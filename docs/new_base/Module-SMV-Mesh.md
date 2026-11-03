@@ -386,7 +386,7 @@ public class KeyboardHandlerPlugin implements ClassTransformPlugin {
 | 插件类名 | 目标类与完整包路径 | 拦截目标方法语义签名 | 插桩模式与机制 | 核心业务职责与技术要点 |
 | :--- | :--- | :--- | :--- | :--- |
 | **`ClientTickPlugin`** | `net.minecraft.client.Minecraft` | `void tick()` | **SMV 虚拟化**<br>(Prefix + Around) | 客户端帧心跳前置广播 `AgentBridge.onTick()`，驱动客户端事件总线与定时器 |
-| **`KeyboardHandlerPlugin`** | `net.minecraft.client.KeyboardHandler` | `void keyPress(long, int, int, KeyEvent)` | **SMV 虚拟化**<br>(Around 消费阻断) | 捕获按键并投递 `AgentBridge.onKey`。若脚本返回 true 消费按键，条件分支直接返回，阻断原版按键响应 |
+| **`KeyboardHandlerPlugin`** | `net.minecraft.client.KeyboardHandler` | `void keyPress(long, int, KeyEvent)` | **SMV 虚拟化**<br>(Around 消费阻断) | 捕获按键并投递 `AgentBridge.onKey`。若脚本返回 true 消费按键，条件分支直接返回，阻断原版按键响应 |
 | **`PacketListenerPlugin`** | `net.minecraft.client.multiplayer.ClientPacketListener` | `void sendChat(String)`<br>`void sendCommand(String)`<br>`void handleCommands(...)` | **SMV 虚拟化**<br>(Around + Postfix) | 截获聊天消息与客户端发出的指令；在接收服务端指令树时提取 `commands` 字段并注入补全树 |
 | **`ServerLifecyclePlugin`** | `net.minecraft.server.MinecraftServer` | `void runServer()`<br>`CompletableFuture reloadResources(...)` | **SMV 虚拟化**<br>(Prefix + Postfix) | 捕获服务端启动上下文与停止释放；包装重载返回的 `CompletableFuture` 联动 JS 脚本自动热重载 |
 | **`ServerTickPlugin`** | `net.minecraft.server.MinecraftServer` | `void tickServer(BooleanSupplier)` | **SMV 虚拟化**<br>(Prefix) | 驱动服务端每 50ms 一次的主心跳，刷新主线程事务缓冲队列与事件派发 |
@@ -398,7 +398,7 @@ public class KeyboardHandlerPlugin implements ClassTransformPlugin {
 
 ## 🗑️ 旧版巨石单体类的废弃与移除
 
-在 Phase 2 重构验收阶段（commit `79c0da6`），原有的旧版单体类 `MinecraftTransformer.java`（已于 commit `79c0da6` 彻底废弃删除，-402 lines）：
+在 Phase 2 重构验收阶段（commit `b4934c2`），原有的旧版单体类 `MinecraftTransformer.java`（已于 commit `b4934c2` 彻底废弃删除，-402 lines）：
 - 消除原有冗长脆弱的 `if-else` 级联；
 - 消除直接向原方法拼接底层汇编指令的隐患；
 - 系统引导入口 [`AgentMain.java`](../../src/com/graalagent/AgentMain.java) 全面换装为 `SMVOrchestrator.createDefault()`。
