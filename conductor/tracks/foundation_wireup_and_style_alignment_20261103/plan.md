@@ -43,10 +43,10 @@
 - [x] cff5acf Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 知识库文档事实与测试矩阵全量校准 (Documentation & Test Matrix Synchronization)
-- [ ] Task: 校准核心模块技术规范文档
-    - [ ] 校准 `docs/new_base/Module-Diagnostics-and-Logging.md` 中 `CrashDumpRecorder` 实例签名与参数顺序
-    - [ ] 校准 `docs/new_base/Module-Bridge-and-Dispatcher.md` 中 `EnvironmentContext` 实例模型描述
-    - [ ] 校准 `docs/new_base/Module-Bootstrap.md` 与实际 `AgentMain` 引导流程
+- [x] eb67e75 Task: 校准核心模块技术规范文档
+    - [x] 校准 `docs/new_base/Module-Diagnostics-and-Logging.md` 中 `CrashDumpRecorder` 实例签名与参数顺序
+    - [x] 校准 `docs/new_base/Module-Bridge-and-Dispatcher.md` 中 `EnvironmentContext` 实例模型描述
+    - [x] 校准 `docs/new_base/Module-Bootstrap.md` 与实际 `AgentMain` 引导流程
 - [ ] Task: 校准测试矩阵、真实提交 Hash 与微插件形参
     - [ ] 更新 `docs/new_base/Verification-and-Testing.md` 中 Phase 1 矩阵为真实测试方法名
     - [ ] 将 `docs/new_base/Module-SMV-Mesh.md` 与 `Verification-and-Testing.md` 中的幽灵提交 `79c0da6` 替换为真实提交 `b4934c2`
