@@ -2,12 +2,12 @@
 title: 模块规范：标准 ESM 运行时与 Modlet 模块包体系 (ESM Modlet System)
 date: 2026-11-03
 tags:
-  - module
-  - esm
-  - ecmascript
-  - modlet
-  - package-management
-  - new-base
+  - "#/module"
+  - "#/esm"
+  - "#/ecmascript"
+  - "#/modlet"
+  - "#/package-management"
+  - "#/new-base"
 ---
 
 # 模块规范：标准 ESM 运行时与 Modlet 模块包体系 (ESM Modlet System)
@@ -18,27 +18,31 @@ tags:
 
 ---
 
-## 模块架构全景图
+## 🏗️ 模块架构全景图
 
 ```mermaid
 flowchart TD
+    classDef dir fill:#0f172a,stroke:#38bdf8,color:#fff
+    classDef loader fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    classDef rt fill:#065f46,stroke:#10b981,color:#fff
+
     subgraph ScriptsRoot["scripts/ 物理工作区"]
-        ModA["modlets/magic_system/\n- manifest.json\n- index.js (入口)\n- spells.js"]
-        ModB["modlets/custom_boss/\n- manifest.json\n- index.js\n- config.json"]
-        Shared["modlets/common_utils/\n- manifest.json\n- math.js\n- formatting.js"]
+        ModA["modlets/magic_system/\n- manifest.json\n- index.js (主入口)\n- lib/spells.js"]:::dir
+        ModB["modlets/custom_boss/\n- manifest.json\n- index.js\n- config.json"]:::dir
+        Shared["modlets/common_utils/\n- manifest.json\n- math.js\n- formatting.js"]:::dir
     end
 
     subgraph ModletLoader["ModletManager (模块包加载内核)"]
-        Scan["1. 扫描与解析 manifest.json"]
-        DAG["2. 依赖有向无环图 (DAG) 拓扑排序"]
-        Resolve["3. GraalVM ESM 模块解析器\n(MIME: application/javascript+module)"]
-        Lifecycle["4. 声明式生命周期挂钩\n(onEnable / onDisable)"]
+        Scan["1. 扫描与解析 manifest.json"]:::loader
+        DAG["2. 依赖有向无环图 (DAG) 拓扑排序"]:::loader
+        Resolve["3. GraalVM ESM 模块解析器\n(MIME: application/javascript+module)"]:::loader
+        Lifecycle["4. 声明式生命周期治理\n(onEnable / onDisable 注册)"]:::loader
     end
 
     subgraph Runtime["GraalVM Polyglot Context"]
-        ScopeA["Modlet 隔离命名空间: magic_system"]
-        ScopeB["Modlet 隔离命名空间: custom_boss"]
-        Import["import { Vector3 } from '../common_utils/math.js'"]
+        ScopeA["Modlet 独立命名空间: magic_system"]:::rt
+        ScopeB["Modlet 独立命名空间: custom_boss"]:::rt
+        Import["跨包标准模块导入:\nimport { Vector3 } from '../common_utils/math.js'"]:::rt
     end
 
     ScriptsRoot --> Scan
@@ -51,21 +55,18 @@ flowchart TD
 
 ---
 
-## Modlet 包结构与元数据规范
+## ⚙️ 核心数据模板与 API 接口契约
 
-一个合规的 Modlet 是一个独立的文件夹，必须位于 `scripts/modlets/<modlet-id>/` 下，并具备如下标准目录结构：
+### 1. 元数据清单模式规范与数据模型 (`manifest.json` & `ModletManifest`)
 
-```
-scripts/modlets/magic_system/
-├── manifest.json            // 必需：Modlet 元数据清单
-├── index.js                 // 必需：主模块入口 (ESM 格式)
-├── lib/                     // 可选：内部子模块
-│   └── spell_effect.js
-└── assets/                  // 可选：配套数据或配置
-    └── spells.json
-```
+一个合规的 Modlet 是一个独立的自包含文件夹，位于 `scripts/modlets/<modlet-id>/` 下，标准结构如下：
+- `scripts/modlets/<modlet-id>/`
+  - `manifest.json`：**必需**。Modlet 核心元数据与依赖清单；
+  - `index.js`：**必需**。Modlet 的 ECMAScript 主入口模块；
+  - `lib/`：**可选**。内部子模块文件夹；
+  - `assets/`：**可选**。配套的配置或静态资源文件。
 
-### 1. 元数据清单规范 (`manifest.json`)
+#### `manifest.json` JSON 样例
 ```json
 {
   "id": "magic_system",
@@ -81,87 +82,109 @@ scripts/modlets/magic_system/
 }
 ```
 
-- `id`：唯一英文标识符，只能包含小写字母、数字与下划线；
-- `main`：ESM 主入口文件，默认为 `index.js`；
-- `dependencies`：所依赖的其他 Modlet 列表。加载器在启动时会自动进行**拓扑排序（Topological Sort）**，保证被依赖的前置包必定先于当前包加载；
-- `environment`：运行环境限定，支持 `CLIENT`（仅客户端加载）、`SERVER`（仅独立服务端加载）、`BOTH`（双端通用）。
+#### Java 不可变数据载体 (`ModletManifest`)
+```java
+package com.graalagent.modlet;
 
-### 2. 标准 ESM 入口文件与生命周期规范 (`index.js`)
+import java.nio.file.Path;
+import java.util.Map;
 
-Modlet 必须采用标准 ECMAScript 语法编写，通过原生命名导出定义生命周期：
+/** Modlet 清单数据模型 */
+public record ModletManifest(
+        String id,
+        String name,
+        String version,
+        String description,
+        String author,
+        String main,
+        Map<String, String> dependencies,
+        String environment
+) {}
+
+/** 运行时已加载的 Modlet 状态 */
+public record ModletInfo(
+        ModletManifest manifest,
+        Path rootDir,
+        boolean enabled
+) {}
+```
+
+---
+
+### 2. 标准 ESM 入口生命周期契约 (`index.js`)
+
+Modlet 必须采用标准 ECMAScript 语法编写，通过导出特定的生命周期函数与框架进行协同：
 
 ```javascript
-// 支持从同包或跨包导入其他 ESM 模块
-import { formatTitle } from './lib/spell_effect.js';
-import { Vector3 } from '../common_utils/math.js';
+// index.js 标准入口模板
+import { formatTitle } from '../common_utils/math.js';
 
 /**
- * 模块启用钩子 (系统加载或热重载时触发)
- * @param {ModletContext} ctx 注入专属于当前 Modlet 的受限上下文门面
+ * 模块启用钩子
+ * @param {ModletContext} ctx 专属受控上下文门面
  */
 export function onEnable(ctx) {
-    ctx.logger.info("动态魔法系统正在启动...");
+    ctx.logger.info("Magic System loaded: " + formatTitle("Spell Master"));
 
-    // 注册指令
-    ctx.commands.register("cast", (args, player) => {
-        player.sendMessage(formatTitle("你释放了魔法！"));
+    // 注册指令 (当 Modlet 卸载时自动注销)
+    ctx.commands.register("cast", (source, spellName) => {
+        // 施法逻辑...
     });
 
-    // 注册定时任务 (热重载时框架会自动根据 Modlet 隔离清理，无需手动注销)
+    // 注册定时器 (模块热重载时自动清理)
     ctx.timers.setInterval(() => {
-        // 周期性粒子检查...
+        // 定时粒子刷新
     }, 1000);
-
-    // 监听事件
-    ctx.events.on("key", (window, key) => {
-        // 自定义按键监听
-    });
 }
 
 /**
- * 模块禁用钩子 (热重载前夕或服务关闭时触发)
+ * 模块禁用钩子：在重载或停机前夕触发
  */
 export function onDisable() {
-    // 执行自定义持久化保存或资源释放
+    // 释放非托管资源或持久化状态
 }
 ```
 
 ---
 
-## GraalVM 原生 ESM 解析器集成技术规范
-
-在底层，通过调用 GraalVM 提供的 `application/javascript+module` MIME 类型，让引擎将源码作为独立 Module 解析：
+### 3. Modlet 管理器 API 契约 (`ModletManager`)
 
 ```java
-public Source createModuleSource(File file) throws IOException {
-    return Source.newBuilder("js", file)
-            .mimeType("application/javascript+module")
-            .name(file.getName())
-            .build();
+package com.graalagent.modlet;
+
+import java.nio.file.Path;
+import java.util.List;
+
+public class ModletManager {
+
+    /** 扫描工作目录下所有 Modlet，构建 DAG 依赖图并按拓扑序装载 */
+    public void scanAndLoadAll(Path modletsDir);
+
+    /** 单包增量热重载：触发 onDisable -> 清理资源 -> 重新编译求值 -> 触发 onEnable */
+    public void reloadModlet(String modletId);
+
+    /** 禁用并卸载指定 Modlet */
+    public void disableModlet(String modletId);
+
+    /** 获取当前所有活动 Modlet 的快照 */
+    public List<ModletInfo> getLoadedModlets();
 }
 ```
 
-### 自定义模块定位协议 (`FileSystem.resolve`)
-为了使模块能够通过相对路径（如 `../common_utils/math.js`）精准定位依赖文件，加载器需实现定制的虚拟文件定位策略：
-1. **相对路径解析**：基于引用方模块（Referrer）的真实物理路径进行规范化解析（`resolvePath`）；
-2. **安全隔离**：严禁模块解析跳出 `scripts/` 工作目录边界；
-3. **缓存与循环依赖检测**：GraalVM 内部基于 URL 缓存已加载的模块对象，配合 DAG 拓扑验证，杜绝循环依赖死锁。
-
 ---
 
-## 增量热重载优势 (Incremental Reload)
+## ⚡ 增量热重载架构 (Incremental Reload)
 
-对比旧架构中“修改一个文件必须关停所有 Context、全量重新加载所有脚本”的笨重设计，基于 ESM 的 Modlet 体系支持**单包增量重载**：
+对比旧架构中“修改一个文件必须全量重启整个 JavaScript 运行时并重新执行所有脚本”的笨重机制，基于 ESM 的 Modlet 体系支持**单包增量重载**：
 - 当用户仅修改了 `scripts/modlets/magic_system/spells.js` 时；
-- `ModletManager` 仅调用该包的 `onDisable()`，注销其挂载的定时器和指令；
-- 单独重新编译求值 `magic_system` 及其下游依赖包，其他无关 Modlet 毫秒不停歇继续运行！
+- `ModletManager` 仅调用 `magic_system` 的 `onDisable()`，清空其专属的定时器与命令节点；
+- 仅重新编译求值 `magic_system` 及其直接依赖方，其余无关的 Modlet 毫秒不停歇继续运行，达成极速开发迭代体验。
 
 ---
 
-## 相关文档双链
-
-- [[Index]] - 返回技术蓝图索引
-- [[System-Architecture]] - 查看系统分层拓扑
-- [[Module-DualContext-Engine]] - 深入双容器运行环境
-- [[Module-Concurrency-and-Events]] - 深入事件总线机制
-- [[Module-Virtual-Datapack]] - 深入数据包资源集成
+## 🔗 相关导航
+- 蓝图总索引：[[Index|新一代架构技术蓝图索引]]
+- 核心术语：[[Terminology-and-Concepts|核心术语与物理概念体系]]
+- 双容器引擎：[[Module-DualContext-Engine|双容器隔离引擎与看门狗抢占机制]]
+- 并发与事件：[[Module-Concurrency-and-Events|异步事务缓冲与无锁事件总线]]
+- 虚拟数据包：[[Module-Virtual-Datapack|虚拟内存数据包与动态资源管线]]

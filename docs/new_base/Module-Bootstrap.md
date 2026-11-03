@@ -1,44 +1,98 @@
 ---
-title: 模块规范：引导装载与类加载脱壳 (Bootstrap)
+title: 模块规范与实现：引导装载与类加载脱壳 (Bootstrap)
 date: 2026-11-03
 tags:
-  - module
-  - bootstrap
-  - classloader
-  - instrumentation
-  - new-base
+  - "#/module"
+  - "#/bootstrap"
+  - "#/config"
+  - "#/classloader"
+  - "#/bundler"
+  - "#/new-base"
 ---
 
-# 模块规范：引导装载与类加载脱壳 (Bootstrap)
+# 模块规范与实现：引导装载与类加载脱壳 (Bootstrap)
 
-本模块规范重构前代 [`AgentMain.java`](file:///H:/mc-mod/graal-agent/src/com/graalagent/AgentMain.java)，建立高健壮性、防御式探测、配置解耦的下一代 JVM 引导装载架构。
+本模块规范整合了早期引导架构设计与 **Track 1 (`phase1_foundation_infra_20261103`)**、**Track 2 (`phase2_smv_bytecode_mesh_20261103`)** 所交付的生产级实现。它彻底消除了历史实现中硬编码字符串路径拼接、依赖加载随机无序、缺失 GraalVM 关键依赖时静默故障以及 Minecraft Bundler 启动器对系统类加载器的人工截断问题。
 
 ---
 
-## 模块架构与职责解耦
+## 🧭 源码与测试工程导航
 
-前代 `AgentMain` 内部混杂了路径推导、JAR 文件扫描、Logger 初始化、系统类加载器追加、参数解析与 Transformer 注册。
-新一代规范将其彻底拆分为四个专用组件：
+- **不可变强类型配置 Record**：[`src/com/graalagent/bootstrap/AgentConfig.java`](../../src/com/graalagent/bootstrap/AgentConfig.java)
+- **依赖注入与确定性校验器**：[`src/com/graalagent/bootstrap/LibraryInjector.java`](../../src/com/graalagent/bootstrap/LibraryInjector.java)
+- **Bundler 启动器脱壳微插件**：[`src/com/graalagent/transformer/plugins/BundlerPlugin.java`](../../src/com/graalagent/transformer/plugins/BundlerPlugin.java)
+- **Agent 主入口与编排器**：[`src/com/graalagent/AgentMain.java`](../../src/com/graalagent/AgentMain.java)
+- **引导层离线自动化测试**：[`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java)
+
+---
+
+## 🏗️ 引导阶段全景架构拓扑
 
 ```mermaid
 flowchart TD
-    JVM["JVM 启动入口: premain / agentmain"] --> Boot["AgentBootstrap (生命周期编排总控)"]
+    classDef jvm fill:#0f172a,stroke:#38bdf8,color:#fff
+    classDef boot fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    classDef plugin fill:#065f46,stroke:#10b981,color:#fff
+    classDef diag fill:#831843,stroke:#ec4899,color:#fff
 
-    Boot --> Config["AgentConfig (配置解析器)\n- 解析命令行参数 (lib=, scripts=)\n- 探测规范物理路径与工作区"]
-    Boot --> LogInit["EarlyDiagnostics (早期诊断记录器)\n- 在游戏日志就绪前提供零依赖崩溃转储"]
-    Boot --> LibInj["LibraryInjector (依赖注入器)\n- 扫描 GraalVM Polyglot 依赖 JARs\n- 批量挂载至 System ClassLoader"]
-    Boot --> BundlerFix["BundlerUnpatcher (启动器脱壳器)\n- 拦截 net.minecraft.bundler.Main\n- 恢复 URLClassLoader -> AppClassLoader 委托链"]
-    Boot --> SMVReg["SMVOrchestrator 注册至 Instrumentation"]
+    JVM["JVM 启动入口 (-javaagent:graal-agent.jar)"]:::jvm --> AM["AgentMain.premain / agentmain"]:::boot
+
+    subgraph ConfigResolution["1. 强类型配置与路径决议"]
+        AC["AgentConfig.parse
+- 规范化基准目录 agentDir
+- 决议 scripts, lib, log 路径
+- debugMode 解析"]:::boot
+    end
+
+    subgraph EarlyTelemetry["2. 遥测中心就绪"]
+        DH["DiagnosticsHub.initialize
+- 配置日志输出路径与调试级别
+- 启动专用守护写入线程"]:::diag
+    end
+
+    subgraph DependencyMount["3. 确定性依赖挂载与校验"]
+        LI["LibraryInjector.injectLibraries
+- lib/ 目录下 .jar 字典序升序排序
+- appendToSystemClassLoaderSearch 批量挂载
+- 关键依赖类探测门禁 DEFAULT_CRITICAL_CLASSES"]:::boot
+    end
+
+    subgraph BytecodePipeline["4. SMV 网格流水线注册"]
+        SO["SMVOrchestrator.createDefault
+- 挂载 BundlerPlugin 脱壳插件
+- 注册客户端与服务端 8 大微插件
+- 接入 Instrumentation.addTransformer"]:::plugin
+    end
+
+    AM --> ConfigResolution
+    ConfigResolution --> EarlyTelemetry
+    EarlyTelemetry --> DependencyMount
+    DependencyMount --> BytecodePipeline
 ```
 
 ---
 
-## 核心组件技术实现规范
+## ⚙️ 核心数据模板与 API 接口契约
 
-### 1. 结构化配置解析器 (`AgentConfig`)
-替代前代原生的硬编码路径拼接，采用强类型只读配置对象：
+### 1. 不可变强类型配置数据模板 (`AgentConfig`)
+
+系统淘汰旧版动态硬编码路径，采用不可变 Java 16+ Record 作为全局只读配置载体：
 
 ```java
+package com.graalagent.bootstrap;
+
+import java.nio.file.Path;
+
+/**
+ * 强类型不可变引导配置模型
+ *
+ * @param agentJarPath  Agent JAR 自身绝对路径
+ * @param agentDir      Agent 所在父目录（基准目录）
+ * @param scriptsDir    用户 JS 脚本与 Modlet 工作区目录（默认 agentDir/scripts）
+ * @param libDir        GraalVM 运行时与依赖库目录（默认 agentDir/lib）
+ * @param logFilePath   诊断日志输出物理路径（默认 agentDir/agent.log）
+ * @param debugMode     是否开启纳秒级调试遥测
+ */
 public record AgentConfig(
         Path agentJarPath,
         Path agentDir,
@@ -47,85 +101,145 @@ public record AgentConfig(
         Path logFilePath,
         boolean debugMode
 ) {
+    /**
+     * 解析命令行参数并结合 Agent 所在物理位置安全决议全量路径
+     *
+     * @param agentArgs        逗号分隔的命令行参数 (如 "scripts=my_scripts,lib=my_lib,debug=true")
+     * @param agentJarLocation AgentMain 检测到的自身物理定位
+     * @return 经过规范化校验的不可变配置实例
+     */
     public static AgentConfig parse(String agentArgs, Path agentJarLocation) {
-        // 1. 标准化 agent 根路径
-        Path baseDir = (agentJarLocation != null && agentJarLocation.getParent() != null)
-                ? agentJarLocation.getParent().toAbsolutePath().normalize()
-                : Paths.get(".").toAbsolutePath().normalize();
-
-        // 2. 解析参数键值对
-        Map<String, String> params = parseArgs(agentArgs);
-
-        // 3. 决议候选工作区
-        Path scripts = resolvePath(params.get("scripts"), baseDir.resolve("scripts"));
-        Path lib = resolvePath(params.get("lib"), baseDir.resolve("lib"));
-        Path log = resolvePath(params.get("log"), baseDir.resolve("agent.log"));
-        boolean debug = Boolean.parseBoolean(params.getOrDefault("debug", "false"));
-
-        return new AgentConfig(agentJarLocation, baseDir, scripts, lib, log, debug);
+        // 实现详见 src/com/graalagent/bootstrap/AgentConfig.java
     }
 }
 ```
 
-### 2. 依赖注入器 (`LibraryInjector`)
-GraalVM Truffle 引擎对于运行时符号的依赖十分严苛。如果某个依赖缺失，引擎在编译期可能不报错，但在执行复杂 JS 特性时抛出未预期的 `NoClassDefFoundError`。
-
-新规范引入**确定性依赖校验（Deterministic Dependency Verification）**：
-1. **核心依赖清单核验**：
-   预定义关键特征类签名（如 `org.graalvm.polyglot.Context`, `com.oracle.truffle.api.Truffle`, `com.ibm.icu.text.DateFormat`）。
-2. **挂载后反射探测**：
-   挂载完成后，立即尝试通过 `ClassLoader.getSystemClassLoader().loadClass(...)` 测试装载关键类。若缺少任何关键类，在启动第一毫秒立即以高可读性错误框提示，杜绝游戏启动后中途崩溃。
-
-### 3. Bundler 脱壳与类加载委托链修复 (`BundlerUnpatcher`)
-现代 Minecraft 官方发布包使用 Bundler 机制：
-- `net.minecraft.bundler.Main` 使用私有 `URLClassLoader` 载入提取出的游戏主包；
-- 原版代码在构造此类加载器时，主动调用 `ClassLoader.getPlatformClassLoader()` 或将父级截断为 `null`；
-- 这导致游戏内部代码向上回溯时无法穿透到 `AppClassLoader`（系统类加载器），因而无法“看见”通过 `appendToSystemClassLoaderSearch` 挂载的 Agent 类。
-
-#### 修复原理规范
-通过在 `SMVOrchestrator` 中拦截 `net/minecraft/bundler/Main`：
-1. 匹配其 `run([Ljava/lang/String;)V` 方法中的 `invokevirtual java/lang/ClassLoader.getParent()` 调用指令；
-2. 消除截断逻辑，强制将 `AppClassLoader`（即 `ClassLoader.getSystemClassLoader()`）作为其父类加载器传入；
-3. **效果**：Minecraft 运行时的所有游戏类和数据包类均能透明访问 `com.graalagent.*` 命名空间及 GraalVM 运行时。
+#### 启动参数语法规范
+支持在 JVM 启动参数 `-javaagent:graal-agent.jar=<args>` 中传入以逗号分隔的键值对：
+- `scripts=<path>`：自定义脚本根目录（支持绝对路径或基于 `agentDir` 的相对路径）；
+- `lib=<path>`：自定义依赖库目录；
+- `log=<path>`：自定义日志落盘文件路径；
+- `debug=true|false`：开启或关闭详细调试日志。
 
 ---
 
-## 接口契约规范
+### 2. 依赖注入与确定性校验 API 契约 (`LibraryInjector`)
+
+为确保 GraalVM Truffle 引擎跨平台类加载顺序一致，并杜绝缺失关键依赖时的静默故障，[`LibraryInjector`](../../src/com/graalagent/bootstrap/LibraryInjector.java) 确立了如下生产级 API 接口：
 
 ```java
 package com.graalagent.bootstrap;
 
 import java.lang.instrument.Instrumentation;
+import java.nio.file.Path;
+import java.util.List;
 
-public final class AgentBootstrap {
-    private static volatile AgentConfig configuration;
-    private static volatile boolean initialized = false;
+public class LibraryInjector {
 
-    public static void premain(String agentArgs, Instrumentation inst) {
-        bootstrap("premain", agentArgs, inst);
-    }
+    /** 核心基石依赖类探测探针清单 */
+    public static final List<String> DEFAULT_CRITICAL_CLASSES = List.of(
+            "org.graalvm.polyglot.Context",
+            "com.oracle.truffle.api.Truffle"
+    );
 
-    public static void agentmain(String agentArgs, Instrumentation inst) {
-        bootstrap("agentmain", agentArgs, inst);
-    }
+    /**
+     * 极速无副作用类存在性探测（initialize = false，杜绝触发 static 块）
+     */
+    public static boolean verifyClassPresent(String className, ClassLoader cl);
 
-    private static synchronized void bootstrap(String mode, String args, Instrumentation inst) {
-        if (initialized) return;
-        // 编排组件执行...
-        initialized = true;
-    }
+    /**
+     * 依赖门禁探测：检查指定类名集合在指定类加载器中的存在性，返回缺失的类名列表
+     */
+    public static List<String> checkDependencies(ClassLoader cl, List<String> classNames);
 
-    public static AgentConfig getConfiguration() {
-        return configuration;
-    }
+    /**
+     * 依赖包字典序确定性批量挂载至 System ClassLoader
+     *
+     * @param libDir 依赖 JAR 物理目录
+     * @param inst   JVM Instrumentation 句柄
+     * @return 成功挂载的 JAR 文件数量
+     */
+    public static int injectLibraries(Path libDir, Instrumentation inst);
 }
 ```
 
 ---
 
-## 相关文档双链
+### 3. Bundler 脱壳与类加载委托链修复 (`BundlerPlugin`)
 
-- [[Index]] - 返回技术蓝图索引
-- [[System-Architecture]] - 查看系统分层拓扑
-- [[Module-SMV-Mesh]] - 深入影子方法虚拟化
-- [[Module-Diagnostics-and-Logging]] - 深入早期诊断日志
+自 Minecraft 1.18 起，官方发布包内置了 `net.minecraft.bundler.Main`：
+1. 原版启动器创建私有 `URLClassLoader` 载入提取出的游戏主 JAR；
+2. 在调用构造方法时，原版逻辑主动通过 `ClassLoader.getParent()` 截断父类加载器，将其置为 `PlatformClassLoader`；
+3. 这导致游戏内部运行的所有类在向上查找父类时，完全绕过了系统类加载器（`AppClassLoader`），从而无法“看见”挂载在 Agent 上的 GraalVM 类与 `com.graalagent.*` 符号。
+
+#### 3.1 解决方案：标称类型 Class-File API 指令切除
+在新一代微内核插件流水线中，通过专用微插件 [`BundlerPlugin`](../../src/com/graalagent/transformer/plugins/BundlerPlugin.java) 拦截目标类 `net.minecraft.bundler.Main` 的入口方法 `void run(String[] args)`，完全遵循 **JDK 24+ Nominal Typing First** 标准：
+
+```java
+package com.graalagent.transformer.plugins;
+
+import com.graalagent.transformer.ClassTransformPlugin;
+import java.lang.classfile.*;
+import java.lang.classfile.instruction.InvokeInstruction;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
+import java.lang.constant.MethodTypeDesc;
+
+public class BundlerPlugin implements ClassTransformPlugin {
+    public static final String TARGET_CLASS = "net/minecraft/bundler/Main";
+
+    private static final ClassDesc CD_CLASS_LOADER = ClassDesc.of("java.lang.ClassLoader");
+    private static final MethodTypeDesc MTD_RUN = MethodTypeDesc.of(
+            ConstantDescs.CD_void, ConstantDescs.CD_String.arrayType());
+
+    @Override
+    public String getTargetClassName() {
+        return TARGET_CLASS;
+    }
+
+    @Override
+    public ClassTransform asClassTransform(ClassModel classModel) {
+        return (builder, element) -> {
+            // 标称类型精准匹配: void run(String[] args)
+            if (element instanceof MethodModel mm
+                    && mm.methodName().equalsString("run")
+                    && mm.methodTypeSymbol().equals(MTD_RUN)) {
+
+                builder.transformMethod(mm, MethodTransform.transformingCode((cb, ce) -> {
+                    // 标称类型匹配: invokevirtual ClassLoader.getParent()
+                    if (ce instanceof InvokeInstruction inv
+                            && inv.owner().asSymbol().equals(CD_CLASS_LOADER)
+                            && inv.name().equalsString("getParent")) {
+                        // 抛弃 getParent 调用，URLClassLoader 直接继承当前 AppClassLoader!
+                        return;
+                    }
+                    cb.with(ce);
+                }));
+                return;
+            }
+            builder.with(element);
+        };
+    }
+}
+```
+
+- **成效**：Minecraft 运行时的所有游戏类和数据包类均能透明访问系统类加载器内的全部类，彻底瓦解了 Bundler 隔离壁垒。
+
+---
+
+## 🧪 验证与测试覆盖
+
+单元测试位于 [`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java)，验证指标如下：
+1. **默认路径决议**：验证无外部参数传入时，系统自适应定位到 Agent 所在目录同级的 `scripts/`、`lib/` 与 `agent.log`；
+2. **命令行解析健壮性**：验证逗号分隔字符串的健壮解析能力，键名不区分大小写，布尔值准确决议；
+3. **确定性关键类验证**：验证系统类加载器中 GraalVM 关键依赖类的探针逻辑；
+4. **缺失依赖精准感知**：验证模拟缺失类时能准确返回缺失类名列表。
+
+---
+
+## 🔗 相关导航
+- 蓝图总索引：[[Index|新一代架构技术蓝图索引]]
+- 核心术语：[[Terminology-and-Concepts|核心术语与物理概念体系]]
+- 字节码网格：[[Module-SMV-Mesh|影子方法虚拟化网格规范]]
+- 遥测引擎：[[Module-Diagnostics-and-Logging|结构化遥测与多维日志诊断]]
+- 验证套件：[[Verification-and-Testing|自动化测试套件与实机验证]]

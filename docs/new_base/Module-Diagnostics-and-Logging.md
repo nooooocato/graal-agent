@@ -1,97 +1,240 @@
 ---
-title: 模块规范：结构化遥测与多维日志诊断 (Diagnostics and Logging)
+title: 模块规范与实现：结构化遥测与多维日志诊断 (Diagnostics and Logging)
 date: 2026-11-03
 tags:
-  - module
-  - logging
-  - diagnostics
-  - telemetry
-  - crash-dump
-  - new-base
+  - "#/module"
+  - "#/logging"
+  - "#/diagnostics"
+  - "#/telemetry"
+  - "#/crash-dump"
+  - "#/log4j"
+  - "#/new-base"
 ---
 
-# 模块规范：结构化遥测与多维日志诊断 (Diagnostics and Logging)
+# 模块规范与实现：结构化遥测与多维日志诊断 (Diagnostics and Logging)
 
-本模块规范重构前代简陋的静态 [`Logger.java`](file:///H:/mc-mod/graal-agent/src/com/graalagent/util/Logger.java)，建立一套涵盖**结构化日志（Structured Logging）**、**高性能异步落盘**、**动态 Log4j2 深度桥接**以及**自动故障现场快照转储（Crash Dump Recorder）**的高可观测性系统。
+本模块规范整合了早期系统遥测设计与 **Track 1 (`phase1_foundation_infra_20261103`)** 所交付的生产级实现。它彻底淘汰了旧版基于单体静态类同步写文件的粗暴方案，全面落地**多级别结构化日志（LogLevel）**、**非阻塞异步写缓冲（DiagnosticsHub）**、**动态 Log4j 2 双向桥接**以及**生产级故障现场快照转储（CrashDumpRecorder）**。
 
 ---
 
-## 诊断遥测体系全景拓扑
+## 🧭 源码与测试工程导航
+
+- **统一遥测中心核心**：[`src/com/graalagent/diagnostics/DiagnosticsHub.java`](../../src/com/graalagent/diagnostics/DiagnosticsHub.java)
+- **结构化日志级别枚举**：[`src/com/graalagent/diagnostics/LogLevel.java`](../../src/com/graalagent/diagnostics/LogLevel.java)
+- **系统故障现场转储器**：[`src/com/graalagent/diagnostics/CrashDumpRecorder.java`](../../src/com/graalagent/diagnostics/CrashDumpRecorder.java)
+- **向后兼容静态门面**：[`src/com/graalagent/util/Logger.java`](../../src/com/graalagent/util/Logger.java)
+- **遥测中心离线单元测试**：[`test/com/graalagent/diagnostics/DiagnosticsTest.java`](../../test/com/graalagent/diagnostics/DiagnosticsTest.java)
+- **实机诊断与转储脚本**：[`scripts/07_bench_and_diagnostics.js`](../../scripts/07_bench_and_diagnostics.js)
+
+---
+
+## 🏗️ 诊断遥测体系全景拓扑
 
 ```mermaid
 flowchart TD
-    LogInput["系统各模块输出 (AgentMain, SMV, Polyglot, Modlets)"] --> Collector["DiagnosticsHub (统一收集核心)"]
+    classDef caller fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    classDef hub fill:#065f46,stroke:#10b981,color:#fff
+    classDef worker fill:#831843,stroke:#ec4899,color:#fff
+    classDef sink fill:#1f2937,stroke:#4b5563,color:#fff
 
-    Collector --> LevelFilter{"日志级别过滤\n(DEBUG, INFO, WARN, ERROR, AUDIT)"}
-    
-    LevelFilter --> Formatter["结构化格式化器\n- 控制台: ANSI 高亮彩色排版\n- 文件: JSON / 标准时间戳格式"]
+    Callers["业务/脚本/插桩线程 (AgentMain, SMV, Polyglot, Modlets)"]:::caller --> Hub["DiagnosticsHub.getInstance()"]:::hub
 
-    Formatter --> AsyncQueue["Disruptor / ArrayBlockingQueue 异步写缓冲"]
-    
-    AsyncQueue --> SinkFile["1. 本地日志轮转: logs/agent-%d{yyyy-MM-dd}.log"]
-    AsyncQueue --> SinkLog4j["2. 动态接入 Minecraft 官方 Log4j 2 (全格式继承)"]
-    AsyncQueue --> SinkInGame["3. 游戏内 OP 浮窗/聊天栏 (高亮报错广播)"]
+    subgraph FilterPipeline["1. 优先级门禁与即时通道"]
+        LevelCheck{"isLoggable(minLevel) ?"}
+        ANSIFormat["ANSI 彩色终端格式化\n(时间戳 + 模块名 + 色彩转义)"]
+        InstantOut["控制台即时输出 (System.out)"]:::sink
+        Log4jSink["动态 Log4j 2 探针 (深度融入游戏日志)"]:::sink
+    end
 
-    Collector --> CrashTrigger{"检测到严重未捕获异常 / JVM Crash"}
-    CrashTrigger --> DumpGen["CrashDumpRecorder\n- 捕获当前字节码插桩快照\n- 捕获活动 Modlet 与堆栈\n- 生成 dumps/agent-crash-<timestamp>.dump"]
+    subgraph AsyncPipeline["2. 异步非阻塞落盘通道"]
+        Queue["LinkedBlockingQueue(LogTask)\n(生产者-消费者无锁队列)"]
+        Daemon["专用守护线程\n(GraalAgent-Diagnostics-Worker)"]:::worker
+        FileDisk["物理磁盘日志 (agent.log)\n- UTF-8 编码\n- 优雅停机 CountDownLatch flush"]:::sink
+    end
+
+    subgraph CrashPipeline["3. 故障现场转储通道"]
+        CrashTrigger["发生未捕获致命异常 / JVM 即将崩溃"]
+        CDR["CrashDumpRecorder.recordCrash\n- 采集 Minecraft 26.3 软硬件配置\n- 采集活跃 Modlet 与沙箱池状态\n- 格式化展开完整因果链调用栈"]:::hub
+        DumpFile["落盘 dumps/agent-crash-(timestamp).dump"]:::sink
+    end
+
+    Hub --> LevelCheck
+    LevelCheck -->|校验通过| ANSIFormat
+    ANSIFormat --> InstantOut
+    ANSIFormat --> Log4jSink
+    LevelCheck -->|校验通过| Queue
+    Queue --> Daemon
+    Daemon --> FileDisk
+
+    CrashTrigger --> CDR
+    CDR --> DumpFile
 ```
 
 ---
 
-## 核心技术与落地规范
+## ⚙️ 核心数据模板与 API 接口契约
 
-### 1. 结构化日志与多通道异步流
-为了防止大量日志 I/O 阻塞主线程或异步 Worker，所有日志输出均通过线程安全的无锁队列投递给后台专用日志守护线程：
-- **控制台渲染**：根据严重级别自动匹配 ANSI 终端着色（`INFO` 绿色、`WARN` 金黄、`ERROR` 鲜红、`AUDIT` 紫色）；
-- **专用文件通道**：自动按天轮转归档，并在启动时保留历史日志；
-- **Log4j 2 深度融合**：通过预解析的方法句柄将消息转发入原版日志管线，天然进入 Minecraft 服务端 `logs/latest.log` 和客户端启动器控制台，无缝享受启动器的日志搜索与着色。
+### 1. 结构化日志级别数据模型 (`LogLevel`)
 
-### 2. 崩溃快照记录器 (`CrashDumpRecorder`)
-当 Agent 遭遇严重未捕获异常（例如某个 Modlet 发生非法操作，或 Class-File API 在处理奇特 Mod 字节码时解析失败）：
-系统会自动收集环境诊断数据并持久化到独立转储文件：
+[`LogLevel`](../../src/com/graalagent/diagnostics/LogLevel.java) 枚举定义了 5 类结构化事件，各级别均具备明确的数字优先级（Priority）与标准终端 ANSI 转义色值：
 
-```text
-================================================================================
-GRAAL-AGENT CRASH DUMP REPORT - 2026-11-03 00:23:45
-================================================================================
-Runtime Environment:
-  Minecraft Version: 26.3
-  Java Version: Eclipse Adoptium OpenJDK 22.0.2
-  Operating System: Windows 11 (amd64)
+```java
+package com.graalagent.diagnostics;
 
-Agent & Engine State:
-  Active Modlets: [magic_system (v1.0.0), custom_boss (v2.1.0)]
-  Active Watchdogs: 0
-  System Context State: READY
-  Sandbox Pool Available: 4 / 4
+public enum LogLevel {
+    DEBUG(0, "\u001B[36m"), // 青色 Cyan
+    INFO(1, "\u001B[32m"),  // 绿色 Green
+    WARN(2, "\u001B[33m"),  // 黄色 Yellow
+    ERROR(3, "\u001B[31m"), // 红色 Red
+    AUDIT(4, "\u001B[35m"); // 紫色 Magenta
 
-Exception Information:
-  java.lang.NullPointerException: Cannot invoke "Object.toString()" because "..."
-    at com.graalagent.modlet.ModletManager.enable(...) ~[graal-agent.jar]
-    at com.graalagent.engine.ScriptEngineFacade.reload(...) ~[graal-agent.jar]
+    private final int priority;
+    private final String ansiColor;
 
-Bytecode Instrumentation Stack:
-  Last Transformed Class: net.minecraft.client.KeyboardHandler
-  Plugin: KeyboardHandlerPlugin (SMV Virtualized: $$shadow$keyPress)
-================================================================================
+    LogLevel(int priority, String ansiColor) {
+        this.priority = priority;
+        this.ansiColor = ansiColor;
+    }
+
+    public int getPriority() { return priority; }
+    public String getAnsiColor() { return ansiColor; }
+
+    /**
+     * 数值比对当前级别是否达到指定门槛
+     */
+    public boolean isAtLeast(LogLevel other) {
+        return this.priority >= other.priority;
+    }
+}
 ```
-这使得无论是开发者调试还是终端用户汇报 Bug，都能凭借一份转储文件在数秒内精确定位根因。
-
-### 3. 运行指标遥测 (Telemetry Metrics)
-提供给脚本开发者或管理员一套轻量级的运行健康度指标：
-- `tps`：通过主心跳监测的平滑 TPS 计算；
-- `script_eval_latency_p99`：P99 脚本执行耗时监控；
-- `active_timers_count`：当前活跃的定时器任务总数；
-- `datapack_reload_latency`：虚拟数据包重载耗时统计。
-
-可通过指令 `/js agent.diagnostics.dumpMetrics()` 直接在控制台打印排查性能瓶颈。
 
 ---
 
-## 相关文档双链
+### 2. 遥测中心核心 API 契约 (`DiagnosticsHub`)
 
-- [[Index]] - 返回技术蓝图索引
-- [[System-Architecture]] - 查看系统分层拓扑
-- [[Module-Security-Specification]] - 深入安全审计集成
-- [[Module-DualContext-Engine]] - 深入引擎异常捕获
-- [[Refactoring-and-Migration-Plan]] - 迁移重构实施规划
+[`DiagnosticsHub`](../../src/com/graalagent/diagnostics/DiagnosticsHub.java) 采用生产者-消费者异步非阻塞架构，守护线程写入文件，主游戏线程投递耗时 $< 1\,\mu\text{s}$：
+
+```java
+package com.graalagent.diagnostics;
+
+import java.io.File;
+
+public class DiagnosticsHub {
+
+    /** 获取全局统一遥测中心单例 */
+    public static DiagnosticsHub getInstance();
+
+    /** 初始化或重定向物理磁盘日志文件 (UTF-8) */
+    public synchronized void initFile(File logFile);
+
+    /** 运行时动态调整最小日志输出级别 */
+    public void setMinLevel(LogLevel level);
+
+    /** 获取当前生效的日志级别 */
+    public LogLevel getMinLevel();
+
+    /** 调试日志派发 (纳秒级门禁丢弃) */
+    public void debug(String message);
+
+    /** 核心业务信息派发 */
+    public void info(String message);
+
+    /** 警告信息派发 */
+    public void warn(String message);
+
+    /** 错误与异常堆栈派发 */
+    public void error(String message, Throwable throwable);
+
+    /** 安全审计日志派发 */
+    public void audit(String message);
+
+    /** 显式刷盘：等待阻塞队列中积压的日志全量写入磁盘 */
+    public void flush();
+
+    /** 优雅停机：释放文件句柄并终止守护工作线程 */
+    public void shutdown();
+}
+```
+
+---
+
+### 3. 系统故障现场转储 API 与数据模板 (`CrashDumpRecorder`)
+
+当遭遇未捕获严重异常或 JVM 崩溃时，[`CrashDumpRecorder`](../../src/com/graalagent/diagnostics/CrashDumpRecorder.java) 采集快照并持久化：
+
+```java
+package com.graalagent.diagnostics;
+
+import java.io.File;
+import java.util.Map;
+
+public final class CrashDumpRecorder {
+
+    /**
+     * 捕获并落盘故障转储快照文件
+     *
+     * @param triggerContext   故障触发上下文说明 (如 "SMV Bytecode Transformation")
+     * @param throwable        未捕获的根因异常
+     * @param extraDiagnostics 额外的诊断元数据键值对
+     * @return 成功生成的 .dump 物理文件句柄
+     */
+    public static File recordCrash(
+            String triggerContext,
+            Throwable throwable,
+            Map<String, Object> extraDiagnostics
+    );
+
+    /**
+     * 生成标准格式化转储文本内容
+     */
+    public static String generateDumpContent(
+            String triggerContext,
+            Throwable throwable,
+            Map<String, Object> extraDiagnostics
+    );
+}
+```
+
+#### 转储报告数据模板样例 (`dumps/agent-crash-<timestamp>.dump`)
+```
+================================================================================
+                    GRAAL-AGENT CRASH REPORT & SYSTEM DUMP
+================================================================================
+Time: 2026-11-03 13:00:00
+Trigger: Uncaught Exception in Player Sandbox Task
+
+[System & Environment]
+Minecraft Version: 26.3
+Java Version     : 25-ea (Oracle Corporation)
+JVM Implementation: OpenJDK 64-Bit Server VM
+OS Architecture  : Windows 11 (amd64)
+
+[Agent Engine Status]
+Loaded Modlets   : [magic_system@1.0.0, common_utils@1.0.0]
+Watchdog Tasks   : 1 active
+Sandbox Pool Size: 4 contexts
+
+[Stacktrace Cause Chain]
+com.oracle.truffle.api.dsl.UnsupportedSpecializationException: ...
+    at com.graalagent.engine.SandboxContext.eval(...)
+Caused by: java.lang.SecurityException: Access to reflection is disallowed
+    at com.graalagent.security.SecurityContextManager.assertPermission(...)
+================================================================================
+```
+
+---
+
+## 🧪 单元测试与实机验证
+
+本模块由以下测试资产保障（详见 [[Verification-and-Testing|验证与基准测试套件体系]]）：
+1. **单元测试**：[`test/com/graalagent/diagnostics/DiagnosticsTest.java`](../../test/com/graalagent/diagnostics/DiagnosticsTest.java)（覆盖级别过滤、ANSI 色彩格式化、异步落盘完整性与崩溃快照模板落盘）；
+2. **实机指令**：通过 [`scripts/07_bench_and_diagnostics.js`](../../scripts/07_bench_and_diagnostics.js) 提供的 `/diaglog` 与 `/crashdump` 指令，在游戏内即时验证彩色日志与现场快照生成。
+
+---
+
+## 🔗 相关导航
+- 蓝图总索引：[[Index|新一代架构技术蓝图索引]]
+- 核心术语：[[Terminology-and-Concepts|核心术语与物理概念体系]]
+- 引导装载：[[Module-Bootstrap|引导装载与类加载脱壳]]
+- 跨端网关：[[Module-Bridge-and-Dispatcher|跨端桥接与统一指令网关]]
+- 验证套件：[[Verification-and-Testing|验证与基准测试套件体系]]

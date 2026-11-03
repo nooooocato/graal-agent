@@ -1,6 +1,6 @@
 ---
 title: graal-agent 架构与工程 Wiki 知识库
-date: 2026-11-02
+date: 2026-11-03
 tags:
   - "#/index"
   - "#/wiki"
@@ -19,17 +19,20 @@ tags:
 
 ```
                             [[Index|Wiki 知识库首页]]
-                                      │
-            ┌─────────────────────────┼─────────────────────────┐
-            ▼                         ▼                         ▼
-  [[Terminology|核心术语表]]      [[Architecture|系统全景架构]]    [[Roadmap-and-Tracks|实施路线与Track拆解]]
-                                      │
-       ┌──────────────────────────────┼──────────────────────────────┐
-       ▼                              ▼                              ▼
+                                       │
+            ┌──────────────────────────┼──────────────────────────┐
+            ▼                          ▼                          ▼
+  [[Terminology|核心术语表]]       [[Architecture|系统全景架构]]    [[Roadmap-and-Tracks|实施路线与Track拆解]]
+            │                          │                          │
+            │                          ▼                          ▼
+            │        [[new_base/Index|新一代架构技术蓝图索引]]  [[new_base/Verification-and-Testing|双阶段验证与测试矩阵]]
+            │                          │
+       ┌────┴──────────────────────────┼──────────────────────────────┐
+       ▼                               ▼                              ▼
 [[Shadow-Method-Virtualization|影子方法虚拟化规范]]  [[Package-System|graalpack 模块化微包规范]]  [[Dual-Engine-Runtime|双引擎与动态编译规范]]
-                                      │
-                                      ▼
-                   [[Multi-Loader-Compatibility|多 Loader 兼容与字节码协调]]
+                                       │
+                                       ▼
+                    [[Multi-Loader-Compatibility|多 Loader 兼容与字节码协调]]
 ```
 
 ---
@@ -40,7 +43,7 @@ tags:
 - **[[Architecture|系统全景架构 (System Architecture)]]**
   深入剖析系统四层架构模型、类加载器（ClassLoader）隔离拓扑与 JVM Premain 顶层接管机制。
 - **[[Terminology|核心术语与概念体系 (Terminology & Concepts)]]**
-  定义了影子方法、语义化锚点、DAG 拓扑、JSR 199 内存编译等所有专有技术概念。
+  定义了影子方法、语义化锚点、DAG 拓扑、JSR 199 内存编译等专有技术概念。
 
 ### 2. 关键技术规范
 - **[[Shadow-Method-Virtualization|影子方法虚拟化与融合规范 (Shadow Method Virtualization)]]**
@@ -56,9 +59,27 @@ tags:
 - **[[Roadmap-and-Tracks|实施路线图与 Track 拆解建议 (Roadmap & Track Breakdown)]]**
   将宏大架构拆解为 5 个独立、自治、高确定性的 Conductor Tracks，保障 AI Agent 在后续研发中具备最高的工作精度和效率。
 
+### 4. 新一代生产级架构与交付实现 (New Base Architecture & Delivered Implementations)
+- **[[new_base/Index|新一代架构技术蓝图与交付实现全景 (New Base Architecture Overview)]]**
+  整合并系统梳理 **第一阶段（基础设施）** 与 **第二阶段（SMV 字节码网格）** 已交付生产级源码资产，全面融合早期设计蓝图与核心术语体系：
+  - [[new_base/Terminology-and-Concepts|核心术语与物理概念体系 (Terminology & Physical Concepts)]]
+  - [[new_base/Vision-and-Principles|架构愿景与六大设计原则 (Vision & Principles)]]
+  - [[new_base/System-Architecture|系统分层拓扑与微内核架构 (System Architecture)]]
+  - [[new_base/Module-Bootstrap|引导装载与类加载脱壳规范 (AgentConfig & BundlerPlugin - 已交付 ✅)]]
+  - [[new_base/Module-SMV-Mesh|影子方法虚拟化网格规范 (MethodVirtualizer & 8 大微插件 - 已交付 ✅)]]
+  - [[new_base/Module-Bridge-and-Dispatcher|跨端桥接与统一指令网关 (MethodHandleCache & BrigadierAdapter - 已交付 ✅)]]
+  - [[new_base/Module-Diagnostics-and-Logging|结构化遥测与多维日志诊断 (DiagnosticsHub & CrashDumpRecorder - 已交付 ✅)]]
+  - [[new_base/Verification-and-Testing|自动化测试套件与实机验证体系 (Testing & Verification Matrix - 已交付 ✅)]]
+  - [[new_base/Module-DualContext-Engine|双容器隔离引擎与看门狗抢占机制 (DualContext & Watchdog 50ms)]]
+  - [[new_base/Module-Concurrency-and-Events|异步事务缓冲与无锁事件总线 (Concurrency & Events)]]
+  - [[new_base/Module-ESM-Modlet-System|标准 ESM 运行时与 Modlet 模块包体系 (ESM Modlet System)]]
+  - [[new_base/Module-Virtual-Datapack|虚拟内存数据包与动态资源管线 (Virtual In-Memory Datapack)]]
+  - [[new_base/Module-Security-Specification|闭包安全令牌与零信任沙箱规范 (Security Specification)]]
+  - [[new_base/Refactoring-and-Migration-Plan|演进路线与平滑重构落地实施计划 (Refactoring Plan)]]
+
 ---
 
 ## 🛠️ 知识库演化与维护准则
 1. **持续同步：** 当某个 Track 实现发生架构偏移或修正时，必须同步更新对应的 Wiki 文档，并记录修改日期与关联提交。
-2. **术语一致：** 新增功能或代码重构时，统一遵循 [[Terminology|核心术语表]] 的定义命名类和接口。
+2. **术语一致：** 新增功能或代码重构时，统一遵循 [[Terminology|核心术语表]] 与 [[new_base/Terminology-and-Concepts|新一代核心术语体系]] 的定义命名类和接口。
 3. **双向链接：** 新增文档时，请务必使用 `[[Wikilinks]]` 与现有知识节点连接，维持网状图谱的连通性。
