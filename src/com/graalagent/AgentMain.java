@@ -15,10 +15,7 @@ import java.lang.instrument.Instrumentation;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.jar.JarFile;
 
 public class AgentMain {
     public static void premain(String agentArgs, Instrumentation inst) {
@@ -146,90 +143,5 @@ public class AgentMain {
             }
         } catch (Throwable ignored) {}
         return null;
-    }
-
-    private static void loadLibraries(File agentDir, String agentArgs, Instrumentation inst) {
-        List<File> candidates = new ArrayList<>();
-
-        if (agentArgs != null && !agentArgs.trim().isEmpty()) {
-            for (String part : agentArgs.split(",")) {
-                String clean = part.trim();
-                if (clean.startsWith("lib=")) {
-                    String libPath = clean.substring("lib=".length());
-                    File customLib = new File(libPath);
-                    if (!customLib.isAbsolute()) {
-                        customLib = new File(agentDir, libPath);
-                    }
-                    candidates.add(customLib);
-                }
-            }
-        }
-
-        candidates.add(new File(agentDir, "lib"));
-        candidates.add(new File("lib"));
-        if (agentDir.getParentFile() != null) {
-            candidates.add(new File(agentDir.getParentFile(), "lib"));
-        }
-
-        File foundLibDir = null;
-        for (File candidate : candidates) {
-            if (candidate.exists() && candidate.isDirectory()) {
-                foundLibDir = candidate;
-                break;
-            }
-        }
-
-        if (foundLibDir == null) {
-            Logger.error("CRITICAL: No 'lib' directory found! Checked locations:");
-            for (File c : candidates) {
-                Logger.error("  - " + c.getAbsolutePath());
-            }
-            Logger.error("Please ensure the 'lib' folder containing GraalJS JARs is placed alongside graal-agent.jar!");
-            return;
-        }
-
-        Logger.info("Loading GraalJS dependencies from: " + foundLibDir.getAbsolutePath());
-        File[] jars = foundLibDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
-        if (jars == null || jars.length == 0) {
-            Logger.warn("No JAR files found in " + foundLibDir.getAbsolutePath());
-            return;
-        }
-
-        for (File jar : jars) {
-            try {
-                Logger.info("Appending dependency to system classloader: " + jar.getName());
-                inst.appendToSystemClassLoaderSearch(new JarFile(jar));
-            } catch (Throwable t) {
-                Logger.error("Failed to append jar: " + jar.getAbsolutePath(), t);
-            }
-        }
-    }
-
-    private static File resolveScriptsDir(String agentArgs, File agentDir) {
-        if (agentArgs != null && !agentArgs.trim().isEmpty()) {
-            for (String part : agentArgs.split(",")) {
-                String clean = part.trim();
-                if (clean.startsWith("scripts=")) {
-                    clean = clean.substring("scripts=".length());
-                    File custom = new File(clean);
-                    if (!custom.isAbsolute()) {
-                        custom = new File(agentDir, clean);
-                    }
-                    return custom;
-                }
-            }
-        }
-
-        File defaultScripts = new File(agentDir, "scripts");
-        if (defaultScripts.exists()) {
-            return defaultScripts;
-        }
-
-        File cwdScripts = new File("scripts");
-        if (cwdScripts.exists()) {
-            return cwdScripts;
-        }
-
-        return defaultScripts;
     }
 }
