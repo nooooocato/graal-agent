@@ -27,8 +27,8 @@
 - [x] bb51e19 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor)
-- [ ] Task: 编写微插件标称类型匹配断言测试 (Red Phase)
-    - [ ] 针对 8 大微插件编写验证其 ClassDesc / MethodTypeDesc 符号匹配与字节码生成的专用断言
+- [x] 524ab1b Task: 编写微插件标称类型匹配断言测试 (Red Phase)
+    - [x] 针对 8 大微插件编写验证其 ClassDesc / MethodTypeDesc 符号匹配与字节码生成的专用断言
 - [ ] Task: 重构 8 大微插件与 MethodVirtualizer 为标称类型 (Green Phase)
     - [ ] 重构 `BundlerPlugin`：使用 `ClassDesc` 与 `ConstantDescs.CD_String.arrayType()` 匹配 `run` 方法与 `getParent` 指令
     - [ ] 重构 `ClientTickPlugin`：使用 `ClassDesc.of("net.minecraft.client.Minecraft")` 与 `MethodTypeDesc.of(ConstantDescs.CD_void)` 标称匹配
