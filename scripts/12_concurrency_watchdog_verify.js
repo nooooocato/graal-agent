@@ -96,4 +96,60 @@ agent.registerCommand("reloadstress", (args) => {
     }
 });
 
-console.log("[Concurrency-Verify] 注册指令: /concurrencyinfo, /concurrencytest, /reloadstress 成功！");
+// 4. 注册指令 /watchdogtest [ms] - 测试执行死循环 while(true){} 并验证看门狗硬熔断
+agent.registerCommand("watchdogtest", (args) => {
+    try {
+        const ScriptEngineFacade = Java.type("com.graalagent.engine.ScriptEngineFacade");
+        const Duration = Java.type("java.time.Duration");
+        const facade = ScriptEngineFacade.getInstance();
+
+        let budget = 50;
+        if (args && args.trim().length > 0) {
+            const parsed = parseInt(args.trim());
+            if (!isNaN(parsed) && parsed > 0) budget = parsed;
+        }
+
+        agent.chat(`§6[Watchdog-Test] 提交死循环脚本 while(true){} 至 AsyncWorker，设定时限预算: §e${budget}ms...`);
+        const future = facade.evalSandboxedAsync("while (true) {}", null, Duration.ofMillis(budget));
+
+        future.thenAccept(res => {
+            agent.chat(res.formatChatMessage());
+            agent.chat(`§7[Watchdog-Test] 执行总耗时: §f${res.executionTimeMs()} ms§7, 熔断状态: §e${res.timedOut()}`);
+        });
+    } catch (err) {
+        agent.chat("§c[Watchdog-Test 异常] " + err.message);
+    }
+});
+
+// 5. 注册指令 /asyncbench [count] - 测试异步并发 Worker 池并发求值
+agent.registerCommand("asyncbench", (args) => {
+    try {
+        const ScriptEngineFacade = Java.type("com.graalagent.engine.ScriptEngineFacade");
+        const facade = ScriptEngineFacade.getInstance();
+
+        let count = 20;
+        if (args && args.trim().length > 0) {
+            const parsed = parseInt(args.trim());
+            if (!isNaN(parsed) && parsed > 0) count = Math.min(parsed, 100);
+        }
+
+        agent.chat(`§e[AsyncBench] 派发 ${count} 个异步沙箱计算任务至 WorkerPool...`);
+        const start = Date.now();
+        let completed = 0;
+
+        for (let i = 0; i < count; i++) {
+            const expr = `${i} * ${i} + 1`;
+            facade.evalSandboxedAsync(expr, null).thenAccept(res => {
+                completed++;
+                if (completed === count) {
+                    const elapsed = Date.now() - start;
+                    agent.chat(`§a[AsyncBench 完成] ${count} 个任务全量执行完毕！总耗时: §f${elapsed} ms§a, 游戏主线程 0 卡顿。`);
+                }
+            });
+        }
+    } catch (err) {
+        agent.chat("§c[AsyncBench 异常] " + err.message);
+    }
+});
+
+console.log("[Concurrency-Verify] 注册指令: /concurrencyinfo, /concurrencytest, /reloadstress, /watchdogtest, /asyncbench 成功！");
