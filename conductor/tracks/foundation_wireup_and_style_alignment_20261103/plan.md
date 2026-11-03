@@ -26,7 +26,7 @@
     - [x] 运行 `run-tests.ps1` 验证桥接调用与指令透传测试通过
 - [x] bb51e19 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor)
+## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor) [checkpoint: cff5acf]
 - [x] 524ab1b Task: 编写微插件标称类型匹配断言测试 (Red Phase)
     - [x] 针对 8 大微插件编写验证其 ClassDesc / MethodTypeDesc 符号匹配与字节码生成的专用断言
 - [x] 0fde588 Task: 重构 8 大微插件与 MethodVirtualizer 为标称类型 (Green Phase)
@@ -40,7 +40,7 @@
 - [x] 0fde588 Task: 运行全量离线单测与 SMV 实机验证总线 (Refactor Phase)
     - [x] 运行 `run-tests.ps1` 确保 63 个单元测试全部通过
     - [x] 运行 `verify-smv.ps1` 验证 5 大步实机插件链与字节码校验 100% 通过
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] cff5acf Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 知识库文档事实与测试矩阵全量校准 (Documentation & Test Matrix Synchronization)
 - [ ] Task: 校准核心模块技术规范文档
