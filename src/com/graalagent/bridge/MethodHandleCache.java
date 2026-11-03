@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class MethodHandleCache {
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.publicLookup();
     private static final Map<String, MethodHandle> CACHE = new ConcurrentHashMap<>();
+    private static volatile boolean phase2WarmedUp = false;
 
     private MethodHandleCache() {}
 
@@ -74,6 +75,18 @@ public final class MethodHandleCache {
         });
     }
 
+    public static MethodHandle findGetterByName(Class<?> clazz, String fieldName) {
+        String key = clazz.getName() + "@" + fieldName + "$getter";
+        return CACHE.computeIfAbsent(key, k -> {
+            try {
+                java.lang.reflect.Field f = clazz.getField(fieldName);
+                return LOOKUP.unreflectGetter(f);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException("Failed to unreflect getter for " + k, e);
+            }
+        });
+    }
+
     public static MethodHandle get(String key) {
         return CACHE.get(key);
     }
@@ -90,30 +103,42 @@ public final class MethodHandleCache {
 
     public static void clear() {
         CACHE.clear();
+        phase2WarmedUp = false;
+    }
+
+    public static boolean isPhase2WarmedUp() {
+        return phase2WarmedUp;
     }
 
     /**
-     * Prewarm core reflection handles on startup using the system classloader.
+     * Phase 1 Warmup (引导期): Prewarm core JVM / standard handles on startup.
      */
     public static void warmup() {
         warmup(null);
     }
 
     /**
-     * Prewarm core reflection handles on startup to eliminate first-call overhead.
+     * Phase 1 Warmup with specific ClassLoader.
      */
     public static void warmup(ClassLoader cl) {
-        if (cl == null) {
-            cl = ClassLoader.getSystemClassLoader();
-        }
-
-        // Standard prewarmed handles
         try {
             findStatic(String.class, "valueOf", MethodType.methodType(String.class, Object.class));
             findVirtual(Thread.class, "getName", MethodType.methodType(String.class));
         } catch (Throwable ignored) {}
 
-        // Prewarm Minecraft 26+ Component & Server handles if present on classpath
+        if (cl != null) {
+            warmupMinecraft(cl);
+        }
+    }
+
+    /**
+     * Phase 2 Warmup (捕获期): Prewarm Minecraft 26+ core handles when Minecraft or Server instance is captured.
+     */
+    public static synchronized void warmupMinecraft(ClassLoader cl) {
+        if (cl == null) {
+            cl = ClassLoader.getSystemClassLoader();
+        }
+
         try {
             Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", false, cl);
             MethodHandle literal = LOOKUP.findStatic(compClass, "literal", MethodType.methodType(compClass, String.class));
@@ -129,5 +154,15 @@ public final class MethodHandleCache {
             put("MinecraftServer#isSameThread", isSameThread);
             put("MinecraftServer#execute", execute);
         } catch (Throwable ignored) {}
+
+        try {
+            Class<?> mcClass = Class.forName("net.minecraft.client.Minecraft", false, cl);
+            MethodHandle isSameThread = LOOKUP.findVirtual(mcClass, "isSameThread", MethodType.methodType(boolean.class));
+            MethodHandle execute = LOOKUP.findVirtual(mcClass, "execute", MethodType.methodType(void.class, Runnable.class));
+            put("Minecraft#isSameThread", isSameThread);
+            put("Minecraft#execute", execute);
+        } catch (Throwable ignored) {}
+
+        phase2WarmedUp = true;
     }
 }

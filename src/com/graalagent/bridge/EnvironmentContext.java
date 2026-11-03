@@ -13,16 +13,27 @@ public class EnvironmentContext {
         this.serverInstance = serverInstance;
     }
 
+    private static volatile boolean capturedWarmedUp = false;
+
     public static EnvironmentContext getLiveContext() {
         return new EnvironmentContext(AgentBridge.getMinecraft(), AgentBridge.getServer());
     }
 
     public static void onInstanceCaptured(Object instance) {
-        // Red phase stub
+        if (instance == null) return;
+        if (!capturedWarmedUp) {
+            synchronized (EnvironmentContext.class) {
+                if (!capturedWarmedUp) {
+                    ClassLoader cl = instance.getClass().getClassLoader();
+                    MethodHandleCache.warmupMinecraft(cl);
+                    capturedWarmedUp = true;
+                }
+            }
+        }
     }
 
     public static boolean isCapturedWarmedUp() {
-        return false;
+        return capturedWarmedUp;
     }
 
     public EnvironmentType getEnvironmentType() {

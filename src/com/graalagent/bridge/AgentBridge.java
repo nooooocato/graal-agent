@@ -3,15 +3,12 @@ package com.graalagent.bridge;
 import com.graalagent.script.ScriptManager;
 import com.graalagent.util.Logger;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.util.concurrent.CompletableFuture;
 
 public class AgentBridge {
     private static volatile Object cachedMinecraft = null;
     private static volatile Object cachedServer = null;
-    private static volatile Method literalMethod = null;
-    private static volatile Method sendSystemMessageMethod = null;
-    private static volatile Field playerField = null;
     private static volatile Boolean mockMultiplayer = null;
 
     public static void setMockMultiplayer(Boolean value) {
@@ -19,7 +16,8 @@ public class AgentBridge {
     }
 
     public static void executeOnGameThread(Runnable task) {
-        // Red phase stub
+        if (task == null) return;
+        EnvironmentContext.getLiveContext().execute(task);
     }
 
     public static boolean isMultiplayer() {
@@ -29,15 +27,15 @@ public class AgentBridge {
         Object mc = getMinecraft();
         if (mc != null) {
             try {
-                Method isLocalServer = mc.getClass().getMethod("isLocalServer");
-                boolean local = (boolean) isLocalServer.invoke(mc);
+                MethodHandle isLocalServerMh = MethodHandleCache.findVirtualByName(mc.getClass(), "isLocalServer");
+                boolean local = (boolean) isLocalServerMh.invoke(mc);
                 if (!local) {
                     return true;
                 }
             } catch (Throwable ignored) {}
             try {
-                Method getCurrentServer = mc.getClass().getMethod("getCurrentServer");
-                Object serverData = getCurrentServer.invoke(mc);
+                MethodHandle getCurrentServerMh = MethodHandleCache.findVirtualByName(mc.getClass(), "getCurrentServer");
+                Object serverData = getCurrentServerMh.invoke(mc);
                 if (serverData != null) {
                     return true;
                 }
@@ -52,8 +50,11 @@ public class AgentBridge {
         }
         try {
             Class<?> mcClass = Class.forName("net.minecraft.client.Minecraft");
-            Method getInstance = mcClass.getMethod("getInstance");
-            cachedMinecraft = getInstance.invoke(null);
+            MethodHandle getInstanceMh = MethodHandleCache.findStaticByName(mcClass, "getInstance");
+            cachedMinecraft = getInstanceMh.invoke();
+            if (cachedMinecraft != null) {
+                EnvironmentContext.onInstanceCaptured(cachedMinecraft);
+            }
             return cachedMinecraft;
         } catch (Throwable ignored) {
             return null;
@@ -66,10 +67,16 @@ public class AgentBridge {
 
     public static void setServer(Object server) {
         cachedServer = server;
+        if (server != null) {
+            EnvironmentContext.onInstanceCaptured(server);
+        }
     }
 
     public static void onServerStart(Object server) {
         cachedServer = server;
+        if (server != null) {
+            EnvironmentContext.onInstanceCaptured(server);
+        }
         Logger.info("MinecraftServer instance captured: " + server.getClass().getName());
         ScriptManager sm = ScriptManager.getInstance();
         if (sm != null) {
@@ -139,26 +146,16 @@ public class AgentBridge {
         com.graalagent.server.ServerCommandDispatcher.registerServerCommands(dispatcher);
     }
 
-    public static java.util.concurrent.CompletableFuture<Void> onServerReloadResources(java.util.concurrent.CompletableFuture<Void> future) {
+    public static CompletableFuture<Void> onServerReloadResources(CompletableFuture<Void> future) {
         if (future != null) {
             return future.thenApply(v -> {
                 Logger.info("Vanilla reloadResources completed. Automatically triggering JS reload...");
-                Object server = getServer();
-                Runnable reloadTask = () -> {
+                executeOnGameThread(() -> {
                     ScriptManager sm = ScriptManager.getInstance();
                     if (sm != null) {
                         sm.reload();
                     }
-                };
-
-                if (server != null) {
-                    try {
-                        Method execute = server.getClass().getMethod("execute", Runnable.class);
-                        execute.invoke(server, reloadTask);
-                        return v;
-                    } catch (Throwable ignored) {}
-                }
-                reloadTask.run();
+                });
                 return v;
             });
         }
@@ -166,7 +163,6 @@ public class AgentBridge {
     }
 
     public static void sendChatMessage(String message) {
-        // Dedicated Server mode: broadcast directly to console and players
         if (cachedServer != null && cachedMinecraft == null) {
             EnvironmentContext.getLiveContext().broadcastMessage(message);
             return;
@@ -176,25 +172,19 @@ public class AgentBridge {
         if (mc != null) {
             Runnable task = () -> {
                 try {
-                    if (playerField == null) {
-                        playerField = mc.getClass().getField("player");
-                    }
-                    Object player = playerField.get(mc);
+                    MethodHandle playerGetter = MethodHandleCache.findGetterByName(mc.getClass(), "player");
+                    Object player = playerGetter.invoke(mc);
                     if (player != null) {
                         ClassLoader cl = mc.getClass().getClassLoader();
                         if (cl == null) {
                             cl = ClassLoader.getSystemClassLoader();
                         }
                         Class<?> compClass = Class.forName("net.minecraft.network.chat.Component", true, cl);
-                        if (literalMethod == null) {
-                            literalMethod = compClass.getMethod("literal", String.class);
-                        }
-                        Object comp = literalMethod.invoke(null, message);
+                        MethodHandle literalMh = MethodHandleCache.findStaticByName(compClass, "literal", String.class);
+                        Object comp = literalMh.invoke(message);
 
-                        if (sendSystemMessageMethod == null) {
-                            sendSystemMessageMethod = player.getClass().getMethod("sendSystemMessage", compClass);
-                        }
-                        sendSystemMessageMethod.invoke(player, comp);
+                        MethodHandle sendSystemMessageMh = MethodHandleCache.findVirtualByName(player.getClass(), "sendSystemMessage", compClass);
+                        sendSystemMessageMh.invoke(player, comp);
                         Logger.logToFileOnly("[Client UI] " + message);
                         return;
                     }
@@ -203,20 +193,8 @@ public class AgentBridge {
                 }
             };
 
-            try {
-                Method isSameThread = mc.getClass().getMethod("isSameThread");
-                boolean same = (boolean) isSameThread.invoke(mc);
-                if (same) {
-                    task.run();
-                } else {
-                    Method execute = mc.getClass().getMethod("execute", Runnable.class);
-                    execute.invoke(mc, task);
-                }
-                return;
-            } catch (Throwable t) {
-                task.run();
-                return;
-            }
+            executeOnGameThread(task);
+            return;
         }
 
         if (cachedServer != null) {
