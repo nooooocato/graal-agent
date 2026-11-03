@@ -1,6 +1,6 @@
 # Implementation Plan: 第一/二阶段接线闭环、字节码标称类型重构与文档校准 (Foundation Wireup, Nominal Class-File Refactor & Doc Alignment)
 
-## Phase 1: 引导编排与高可用基础设施闭环 (Bootstrap & Telemetry Wireup)
+## Phase 1: 引导编排与高可用基础设施闭环 (Bootstrap & Telemetry Wireup) [checkpoint: 5cbf381]
 - [x] 8478828 Task: 编写 AgentMain 引导编排与异常转储测试 (Red Phase)
     - [x] 编写针对 AgentConfig 与 LibraryInjector 在 Agent 引导链路中的集成测试
     - [x] 编写针对未捕获异常自动触发 CrashDumpRecorder 落盘转储的单元测试
@@ -11,7 +11,7 @@
 - [x] 3f8b810 Task: 清理遗留私有方法与回归验证 (Refactor Phase)
     - [x] 移除 `AgentMain.java` 中废弃的 `loadLibraries`、`resolveScriptsDir` 等私有方法，削减冗余代码
     - [x] 运行 `run-tests.ps1` 验证引导测试通过
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] 5cbf381 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 桥接层反射清零与句柄池双阶段预热 (AgentBridge MH Convergence & Dual-Phase Warmup)
 - [ ] Task: 编写 AgentBridge 句柄收敛与预热单测 (Red Phase)
