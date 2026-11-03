@@ -338,6 +338,7 @@ public class ScriptManager {
 
     public boolean onServerTick(Object server) {
         return concurrencyController.tryExecuteTickRead(() -> {
+            com.graalagent.concurrency.TransactionBuffer.flush(server);
             if (AgentBridge.getMinecraft() == null) {
                 if (!gameInitialized) {
                     gameInitialized = true;
