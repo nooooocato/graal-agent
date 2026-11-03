@@ -154,4 +154,46 @@ public class ServerSandboxingTest {
         Assert.assertEquals(1, resPlayer);
         Assert.assertTrue(playerSource.getLastFeedback().contains("TestPlayer42"), "Feedback should contain TestPlayer42: " + playerSource.getLastFeedback());
     }
+
+    public void testConsoleDeadLoopInterruptedByWatchdog() throws Exception {
+        Path tempDir = Files.createTempDirectory("graalagent-console-deadloop-test-");
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        MockConsoleSource consoleSource = new MockConsoleSource();
+        long start = System.currentTimeMillis();
+        // Execute dead loop in console
+        int res = dispatcher.execute("js while(true){}", consoleSource);
+        long elapsed = System.currentTimeMillis() - start;
+
+        Assert.assertEquals(1, res);
+        String feedback = consoleSource.getLastFeedback();
+        Assert.assertTrue(feedback.contains("安全熔断"), "Console should receive safety trip message, got: " + feedback);
+        Assert.assertTrue(feedback.contains("强制终止"), "Feedback should mention forced termination: " + feedback);
+        Assert.assertTrue(elapsed < 4000, "Console dead loop should be interrupted in ~3000ms, elapsed: " + elapsed);
+    }
+
+    public void testPlayerDeadLoopInterruptedByWatchdog() throws Exception {
+        Path tempDir = Files.createTempDirectory("graalagent-player-deadloop-test-");
+        ScriptManager sm = new ScriptManager(tempDir.toFile());
+        sm.start();
+
+        CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
+        ServerCommandDispatcher.registerServerCommands(dispatcher);
+
+        MockPlayerSource playerSource = new MockPlayerSource();
+        long start = System.currentTimeMillis();
+        // Execute dead loop as player
+        int res = dispatcher.execute("js while(true){}", playerSource);
+        long elapsed = System.currentTimeMillis() - start;
+
+        Assert.assertEquals(0, res);
+        String feedback = playerSource.getLastFeedback();
+        Assert.assertTrue(feedback.contains("安全熔断"), "Player should receive safety trip message, got: " + feedback);
+        Assert.assertTrue(feedback.contains("强制终止"), "Feedback should mention forced termination: " + feedback);
+        Assert.assertTrue(elapsed < 500, "Player dead loop should be interrupted in 50ms, elapsed: " + elapsed);
+    }
 }

@@ -3,10 +3,12 @@ package com.graalagent.script;
 import com.graalagent.bridge.AgentBridge;
 import com.graalagent.bridge.brigadier.BrigadierAdapter;
 import com.graalagent.concurrency.ConcurrencyController;
+import com.graalagent.concurrency.WatchdogTimer;
 import com.graalagent.engine.ScriptEngineFacade;
 import com.graalagent.util.Logger;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
@@ -21,12 +23,14 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -243,29 +247,63 @@ public class ScriptManager {
     }
 
     public Object evalInline(String code) {
+        return evalInline(code, Duration.ofSeconds(3));
+    }
+
+    public Object evalInline(String code, Duration timeout) {
         return concurrencyController.executeReadWithResult(() -> {
             if (context == null) return null;
+            WatchdogTimer.WatchdogToken token = WatchdogTimer.schedule(context, timeout, false);
             try {
                 Value result = context.eval("js", code);
+                token.cancel();
                 if (result == null || result.isNull()) return "null";
                 if (result.isHostObject()) return result.asHostObject();
                 return result.toString();
+            } catch (PolyglotException pe) {
+                token.cancel();
+                if (pe.isInterrupted() || pe.isCancelled() || token.hasTriggered()) {
+                    return "§c[安全熔断] 控制台脚本执行超时 (超过 " + timeout.toMillis() + "ms 预算)，已被看门狗强制终止！";
+                }
+                return "Error: " + pe.getMessage();
             } catch (Throwable t) {
+                token.cancel();
+                if (token.hasTriggered()) {
+                    return "§c[安全熔断] 控制台脚本执行超时 (超过 " + timeout.toMillis() + "ms 预算)，已被看门狗强制终止！";
+                }
                 return "Error: " + t.getMessage();
             }
         });
     }
 
     public Object evalSandboxed(String code, Object player) throws Exception {
+        return evalSandboxed(code, player, WatchdogTimer.DEFAULT_BUDGET);
+    }
+
+    public Object evalSandboxed(String code, Object player, Duration timeout) throws Exception {
         return concurrencyController.executeReadWithResultThrows(() -> {
             if (context == null) throw new IllegalStateException("Context not initialized");
+            WatchdogTimer.WatchdogToken token = WatchdogTimer.schedule(context, timeout, false);
             try {
                 com.graalagent.security.ScriptSandbox.setSandboxed(true);
                 setCommandExecutionContext(player, false);
                 Value result = context.eval("js", code);
+                token.cancel();
                 if (result == null || result.isNull()) return "null";
                 if (result.isHostObject()) return result.asHostObject();
                 return result.toString();
+            } catch (PolyglotException pe) {
+                token.cancel();
+                if (pe.isInterrupted() || pe.isCancelled() || token.hasTriggered()) {
+                    throw new TimeoutException("§c[安全熔断] 脚本执行超过 " + timeout.toMillis() + "ms 时间预算，已被看门狗强制终止！");
+                }
+                throw pe;
+            } catch (Throwable t) {
+                token.cancel();
+                if (token.hasTriggered()) {
+                    throw new TimeoutException("§c[安全熔断] 脚本执行超过 " + timeout.toMillis() + "ms 时间预算，已被看门狗强制终止！");
+                }
+                throw t;
             } finally {
                 clearCommandExecutionContext();
                 com.graalagent.security.ScriptSandbox.clear();

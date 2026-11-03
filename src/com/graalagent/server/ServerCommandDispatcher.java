@@ -120,7 +120,11 @@ public class ServerCommandDispatcher {
             Object result;
             if (isConsole) {
                 result = sm.evalInline(code);
-                sendFeedback(source, "§e=> " + result, false);
+                if (result != null && String.valueOf(result).startsWith("§c[安全熔断]")) {
+                    sendFeedback(source, String.valueOf(result), false);
+                } else {
+                    sendFeedback(source, "§e=> " + result, false);
+                }
                 return 1;
             } else {
                 result = sm.evalSandboxed(code, player);
@@ -133,7 +137,11 @@ public class ServerCommandDispatcher {
                 errorMsg = t.getCause().getMessage();
             }
             Logger.error("Error executing server /js command: " + errorMsg, t);
-            sendFeedback(source, "§c[安全限制] " + errorMsg, false);
+            if (errorMsg.startsWith("§c[安全熔断]")) {
+                sendFeedback(source, errorMsg, false);
+            } else {
+                sendFeedback(source, "§c[安全限制] " + errorMsg, false);
+            }
             return 0;
         }
     }

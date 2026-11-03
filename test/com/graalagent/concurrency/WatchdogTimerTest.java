@@ -53,6 +53,7 @@ public class WatchdogTimerTest {
         Assert.assertTrue(didFinish, "Dead loop should have been interrupted by watchdog within 1000ms (elapsed: " + elapsed + "ms)");
         Assert.assertTrue(cancelledCaught.get(), "PolyglotException.isInterrupted() or isCancelled() should be true");
         Assert.assertTrue(token.hasTriggered(), "WatchdogToken should report triggered");
+        context.close(true);
     }
 
     public void testNormalExecutionCancelsWatchdog() {
@@ -64,6 +65,29 @@ public class WatchdogTimerTest {
 
         Assert.assertEquals(42, res);
         Assert.assertFalse(token.hasTriggered(), "Token should not have triggered for normal execution");
+        context.close(true);
+    }
+
+    public void testSyncExecutionInterruptedByWatchdogWithoutForceClose() {
+        Context context = Context.newBuilder("js").build();
+        WatchdogTimer.WatchdogToken token = WatchdogTimer.schedule(context, Duration.ofMillis(50), false);
+
+        long start = System.currentTimeMillis();
+        boolean interrupted = false;
+        try {
+            context.eval("js", "while (true) {}");
+        } catch (PolyglotException pe) {
+            token.cancel();
+            interrupted = pe.isInterrupted() || pe.isCancelled() || token.hasTriggered();
+        }
+
+        long elapsed = System.currentTimeMillis() - start;
+        Assert.assertTrue(interrupted, "Synchronous dead loop should be interrupted by watchdog without closing context");
+        Assert.assertTrue(elapsed < 1000, "Should finish rapidly under watchdog (elapsed: " + elapsed + "ms)");
+
+        // Verify context is still alive and usable
+        int res = context.eval("js", "10 + 20").asInt();
+        Assert.assertEquals(30, res);
         context.close(true);
     }
 }

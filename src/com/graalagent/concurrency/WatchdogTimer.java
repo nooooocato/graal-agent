@@ -91,12 +91,23 @@ public final class WatchdogTimer {
     }
 
     /**
-     * 向高精度看门狗注册监听任务
+     * 向高精度看门狗注册监听任务（默认包含超时未响应强制关闭）
      *
      * @param context 要守护的 Polyglot 容器
      * @param budget  执行时限预算 (超期即触发 context.interrupt)
      */
     public static WatchdogToken schedule(Context context, Duration budget) {
+        return schedule(context, budget, true);
+    }
+
+    /**
+     * 向高精度看门狗注册监听任务
+     *
+     * @param context    要守护的 Polyglot 容器
+     * @param budget     执行时限预算 (超期即触发 context.interrupt)
+     * @param forceClose 超时未响应是否调用 context.close(true) 强制销毁（系统常驻容器应传 false）
+     */
+    public static WatchdogToken schedule(Context context, Duration budget, boolean forceClose) {
         if (context == null) {
             return new WatchdogToken() {
                 @Override public void cancel() {}
@@ -113,11 +124,11 @@ public final class WatchdogTimer {
                 TimeUnit.MILLISECONDS
         );
 
-        ScheduledFuture<?> forceCloseFuture = SCHEDULER.schedule(
+        ScheduledFuture<?> forceCloseFuture = forceClose ? SCHEDULER.schedule(
                 token::triggerForceClose,
                 actualBudget.toMillis() + FORCED_CLOSE_GRACE.toMillis(),
                 TimeUnit.MILLISECONDS
-        );
+        ) : null;
 
         token.setFutures(interruptFuture, forceCloseFuture);
         return token;
