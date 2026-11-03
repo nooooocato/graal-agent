@@ -10,6 +10,7 @@ import java.lang.classfile.ClassModel;
 import java.lang.classfile.ClassTransform;
 import java.lang.classfile.MethodModel;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 
 /**
@@ -19,6 +20,12 @@ import java.lang.constant.MethodTypeDesc;
 public class ServerTickPlugin implements ClassTransformPlugin {
 
     public static final String TARGET_CLASS = "net/minecraft/server/MinecraftServer";
+    private static final ClassDesc CD_SERVER = ClassDesc.of("net.minecraft.server.MinecraftServer");
+    private static final ClassDesc CD_AGENT_BRIDGE = ClassDesc.of("com.graalagent.bridge.AgentBridge");
+    private static final ClassDesc CD_BOOLEAN_SUPPLIER = ClassDesc.of("java.util.function.BooleanSupplier");
+
+    private static final MethodTypeDesc MTD_TICK_SERVER = MethodTypeDesc.of(ConstantDescs.CD_void, CD_BOOLEAN_SUPPLIER);
+    private static final MethodTypeDesc MTD_ON_SERVER_TICK = MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_Object);
 
     @Override
     public String getTargetClassName() {
@@ -37,22 +44,18 @@ public class ServerTickPlugin implements ClassTransformPlugin {
     public ClassTransform asClassTransform(ClassModel classModel) {
         return (builder, element) -> {
             if (element instanceof MethodModel mm
-                    && mm.methodName().stringValue().equals("tickServer")
-                    && mm.methodType().stringValue().equals("(Ljava/util/function/BooleanSupplier;)V")) {
+                    && mm.methodName().equalsString("tickServer")
+                    && mm.methodTypeSymbol().equals(MTD_TICK_SERVER)) {
                 Logger.info("[ServerTickPlugin] SMV Virtualizing MinecraftServer.tickServer()...");
                 MethodVirtualizer.virtualize(builder, mm, "$$shadow$tickServer", cb -> {
                     // Prefix: onServerTick(this)
                     cb.aload(0);
-                    cb.invokestatic(
-                            ClassDesc.of("com.graalagent.bridge.AgentBridge"),
-                            "onServerTick",
-                            MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
-                    );
+                    cb.invokestatic(CD_AGENT_BRIDGE, "onServerTick", MTD_ON_SERVER_TICK);
 
                     // Around: 调用影子方法
                     MethodVirtualizer.invokeShadow(
                             cb,
-                            ClassDesc.of("net.minecraft.server.MinecraftServer"),
+                            CD_SERVER,
                             "$$shadow$tickServer",
                             mm.methodTypeSymbol(),
                             false

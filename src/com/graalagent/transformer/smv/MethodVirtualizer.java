@@ -120,7 +120,7 @@ public final class MethodVirtualizer {
         }
 
         for (ClassDesc paramDesc : methodType.parameterList()) {
-            TypeKind tk = TypeKind.fromDescriptor(paramDesc.descriptorString());
+            TypeKind tk = TypeKind.from(paramDesc);
             cb.loadLocal(tk.asLoadable(), slot);
             slot += tk.slotSize();
         }
@@ -136,7 +136,7 @@ public final class MethodVirtualizer {
      * 根据返回类型描述符发射对应的 return 指令。
      */
     public static void emitReturn(CodeBuilder cb, ClassDesc returnTypeDesc) {
-        TypeKind returnTk = TypeKind.fromDescriptor(returnTypeDesc.descriptorString());
+        TypeKind returnTk = TypeKind.from(returnTypeDesc);
         if (returnTk == TypeKind.VOID) {
             cb.return_();
         } else {

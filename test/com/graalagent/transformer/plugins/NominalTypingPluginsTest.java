@@ -96,18 +96,18 @@ public class NominalTypingPluginsTest {
             Assert.assertNotNull(is, "Could not load bytecode for " + pluginClass.getName());
             ClassModel model = cf.parse(is.readAllBytes());
 
-            Set<String> poolStrings = new java.util.HashSet<>();
+            Set<String> stringConstants = new java.util.HashSet<>();
             for (java.lang.classfile.constantpool.PoolEntry entry : model.constantPool()) {
-                if (entry instanceof Utf8Entry utf8) {
-                    poolStrings.add(utf8.stringValue());
+                if (entry instanceof java.lang.classfile.constantpool.StringEntry se) {
+                    stringConstants.add(se.stringValue());
                 }
             }
 
             for (String forbidden : forbiddenDescriptors) {
                 Assert.assertFalse(
-                        poolStrings.contains(forbidden),
+                        stringConstants.contains(forbidden),
                         "Plugin " + pluginClass.getSimpleName()
-                                + " must NOT contain raw descriptor string literal in bytecode constant pool: '"
+                                + " must NOT contain raw descriptor string literal in code: '"
                                 + forbidden + "'"
                 );
             }

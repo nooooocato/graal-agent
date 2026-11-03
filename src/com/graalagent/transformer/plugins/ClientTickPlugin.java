@@ -10,6 +10,7 @@ import java.lang.classfile.ClassModel;
 import java.lang.classfile.ClassTransform;
 import java.lang.classfile.MethodModel;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 
 /**
@@ -19,6 +20,9 @@ import java.lang.constant.MethodTypeDesc;
 public class ClientTickPlugin implements ClassTransformPlugin {
 
     public static final String TARGET_CLASS = "net/minecraft/client/Minecraft";
+    private static final ClassDesc CD_MINECRAFT = ClassDesc.of("net.minecraft.client.Minecraft");
+    private static final ClassDesc CD_AGENT_BRIDGE = ClassDesc.of("com.graalagent.bridge.AgentBridge");
+    private static final MethodTypeDesc MTD_VOID = MethodTypeDesc.of(ConstantDescs.CD_void);
 
     @Override
     public String getTargetClassName() {
@@ -37,22 +41,22 @@ public class ClientTickPlugin implements ClassTransformPlugin {
     public ClassTransform asClassTransform(ClassModel classModel) {
         return (builder, element) -> {
             if (element instanceof MethodModel mm
-                    && mm.methodName().stringValue().equals("tick")
-                    && mm.methodType().stringValue().equals("()V")) {
+                    && mm.methodName().equalsString("tick")
+                    && mm.methodTypeSymbol().equals(MTD_VOID)) {
                 Logger.info("[ClientTickPlugin] SMV Virtualizing Minecraft.tick()...");
                 MethodVirtualizer.virtualize(
                         builder,
                         mm,
                         "$$shadow$tick",
                         MethodVirtualizer.createPrefixDispatcher(
-                                ClassDesc.of("net.minecraft.client.Minecraft"),
+                                CD_MINECRAFT,
                                 "$$shadow$tick",
                                 mm.methodTypeSymbol(),
                                 false,
                                 cb -> cb.invokestatic(
-                                        ClassDesc.of("com.graalagent.bridge.AgentBridge"),
+                                        CD_AGENT_BRIDGE,
                                         "onTick",
-                                        MethodTypeDesc.ofDescriptor("()V")
+                                        MTD_VOID
                                 )
                         )
                 );

@@ -11,6 +11,7 @@ import java.lang.classfile.ClassTransform;
 import java.lang.classfile.Label;
 import java.lang.classfile.MethodModel;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 
 /**
@@ -20,6 +21,11 @@ import java.lang.constant.MethodTypeDesc;
 public class KeyboardHandlerPlugin implements ClassTransformPlugin {
 
     public static final String TARGET_CLASS = "net/minecraft/client/KeyboardHandler";
+    private static final ClassDesc CD_KEYBOARD_HANDLER = ClassDesc.of("net.minecraft.client.KeyboardHandler");
+    private static final ClassDesc CD_KEY_EVENT = ClassDesc.of("net.minecraft.client.input.KeyEvent");
+    private static final ClassDesc CD_AGENT_BRIDGE = ClassDesc.of("com.graalagent.bridge.AgentBridge");
+    private static final MethodTypeDesc MTD_KEY_PRESS = MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_long, ConstantDescs.CD_int, CD_KEY_EVENT);
+    private static final MethodTypeDesc MTD_ON_KEY = MethodTypeDesc.of(ConstantDescs.CD_boolean, ConstantDescs.CD_long, ConstantDescs.CD_int, ConstantDescs.CD_Object);
 
     @Override
     public String getTargetClassName() {
@@ -38,8 +44,8 @@ public class KeyboardHandlerPlugin implements ClassTransformPlugin {
     public ClassTransform asClassTransform(ClassModel classModel) {
         return (builder, element) -> {
             if (element instanceof MethodModel mm
-                    && mm.methodName().stringValue().equals("keyPress")
-                    && mm.methodType().stringValue().equals("(JILnet/minecraft/client/input/KeyEvent;)V")) {
+                    && mm.methodName().equalsString("keyPress")
+                    && mm.methodTypeSymbol().equals(MTD_KEY_PRESS)) {
                 Logger.info("[KeyboardHandlerPlugin] SMV Virtualizing KeyboardHandler.keyPress()...");
                 MethodVirtualizer.virtualize(builder, mm, "$$shadow$keyPress", cb -> {
                     Label proceedLabel = cb.newLabel();
@@ -47,11 +53,7 @@ public class KeyboardHandlerPlugin implements ClassTransformPlugin {
                     cb.lload(1);
                     cb.iload(3);
                     cb.aload(4);
-                    cb.invokestatic(
-                            ClassDesc.of("com.graalagent.bridge.AgentBridge"),
-                            "onKey",
-                            MethodTypeDesc.ofDescriptor("(JILjava/lang/Object;)Z")
-                    );
+                    cb.invokestatic(CD_AGENT_BRIDGE, "onKey", MTD_ON_KEY);
                     // 2. 若钩子返回 false (未消费)，跳转至影子方法执行原版响应
                     cb.ifeq(proceedLabel);
                     // 3. 若已被 JS 消费，直接返回，阻断原版按键响应！
@@ -61,7 +63,7 @@ public class KeyboardHandlerPlugin implements ClassTransformPlugin {
                     cb.labelBinding(proceedLabel);
                     MethodVirtualizer.invokeShadow(
                             cb,
-                            ClassDesc.of("net.minecraft.client.KeyboardHandler"),
+                            CD_KEYBOARD_HANDLER,
                             "$$shadow$keyPress",
                             mm.methodTypeSymbol(),
                             false

@@ -14,6 +14,7 @@ import java.lang.classfile.MethodModel;
 import java.lang.classfile.MethodTransform;
 import java.lang.classfile.instruction.InvokeInstruction;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 
 /**
@@ -23,6 +24,12 @@ import java.lang.constant.MethodTypeDesc;
 public class PackRepositoryPlugin implements ClassTransformPlugin {
 
     public static final String TARGET_CLASS = "net/minecraft/server/packs/repository/PackRepository";
+    private static final ClassDesc CD_REPOSITORY_SOURCE = ClassDesc.of("net.minecraft.server.packs.repository.RepositorySource");
+    private static final ClassDesc CD_IMMUTABLE_SET = ClassDesc.of("com.google.common.collect.ImmutableSet");
+    private static final ClassDesc CD_DATAPACK_MANAGER = ClassDesc.of("com.graalagent.datapack.DatapackManager");
+
+    private static final MethodTypeDesc MTD_INIT = MethodTypeDesc.of(ConstantDescs.CD_void, CD_REPOSITORY_SOURCE.arrayType());
+    private static final MethodTypeDesc MTD_INJECT_SOURCES = MethodTypeDesc.of(ConstantDescs.CD_Object.arrayType(), ConstantDescs.CD_Object.arrayType());
 
     @Override
     public String getTargetClassName() {
@@ -41,19 +48,19 @@ public class PackRepositoryPlugin implements ClassTransformPlugin {
     public ClassTransform asClassTransform(ClassModel classModel) {
         return (builder, element) -> {
             if (element instanceof MethodModel mm
-                    && mm.methodName().stringValue().equals("<init>")
-                    && mm.methodType().stringValue().equals("([Lnet/minecraft/server/packs/repository/RepositorySource;)V")) {
+                    && mm.methodName().equalsString(ConstantDescs.INIT_NAME)
+                    && mm.methodTypeSymbol().equals(MTD_INIT)) {
                 Logger.info("[PackRepositoryPlugin] Injecting synthetic Datapack repository sources...");
                 builder.transformMethod(mm, MethodTransform.transformingCode(new CodeTransform() {
                     @Override
                     public void accept(CodeBuilder cb, CodeElement ce) {
                         if (ce instanceof InvokeInstruction inv
-                                && inv.owner().asInternalName().equals("com/google/common/collect/ImmutableSet")
-                                && inv.name().stringValue().equals("copyOf")) {
+                                && inv.owner().asSymbol().equals(CD_IMMUTABLE_SET)
+                                && inv.name().equalsString("copyOf")) {
                             cb.invokestatic(
-                                    ClassDesc.of("com.graalagent.datapack.DatapackManager"),
+                                    CD_DATAPACK_MANAGER,
                                     "injectSources",
-                                    MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)[Ljava/lang/Object;")
+                                    MTD_INJECT_SOURCES
                             );
                         }
                         cb.with(ce);

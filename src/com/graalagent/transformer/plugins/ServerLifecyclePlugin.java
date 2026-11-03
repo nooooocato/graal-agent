@@ -10,6 +10,7 @@ import java.lang.classfile.ClassModel;
 import java.lang.classfile.ClassTransform;
 import java.lang.classfile.MethodModel;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 
 /**
@@ -19,6 +20,16 @@ import java.lang.constant.MethodTypeDesc;
 public class ServerLifecyclePlugin implements ClassTransformPlugin {
 
     public static final String TARGET_CLASS = "net/minecraft/server/MinecraftServer";
+    private static final ClassDesc CD_SERVER = ClassDesc.of("net.minecraft.server.MinecraftServer");
+    private static final ClassDesc CD_AGENT_BRIDGE = ClassDesc.of("com.graalagent.bridge.AgentBridge");
+    private static final ClassDesc CD_COMPLETABLE_FUTURE = ClassDesc.of("java.util.concurrent.CompletableFuture");
+    private static final ClassDesc CD_COLLECTION = ClassDesc.of("java.util.Collection");
+
+    private static final MethodTypeDesc MTD_RUN_SERVER = MethodTypeDesc.of(ConstantDescs.CD_void);
+    private static final MethodTypeDesc MTD_ON_SERVER_START = MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_Object);
+    private static final MethodTypeDesc MTD_ON_SERVER_STOP = MethodTypeDesc.of(ConstantDescs.CD_void);
+    private static final MethodTypeDesc MTD_RELOAD_RESOURCES = MethodTypeDesc.of(CD_COMPLETABLE_FUTURE, CD_COLLECTION);
+    private static final MethodTypeDesc MTD_ON_RELOAD_RESOURCES = MethodTypeDesc.of(CD_COMPLETABLE_FUTURE, CD_COMPLETABLE_FUTURE);
 
     @Override
     public String getTargetClassName() {
@@ -37,60 +48,44 @@ public class ServerLifecyclePlugin implements ClassTransformPlugin {
     public ClassTransform asClassTransform(ClassModel classModel) {
         return (builder, element) -> {
             if (element instanceof MethodModel mm) {
-                String methodName = mm.methodName().stringValue();
-                String methodDesc = mm.methodType().stringValue();
-
                 // 1. runServer hook (virtualize to $$shadow$runServer)
-                if (methodName.equals("runServer") && methodDesc.equals("()V")) {
+                if (mm.methodName().equalsString("runServer") && mm.methodTypeSymbol().equals(MTD_RUN_SERVER)) {
                     Logger.info("[ServerLifecyclePlugin] SMV Virtualizing MinecraftServer.runServer()...");
                     MethodVirtualizer.virtualize(builder, mm, "$$shadow$runServer", cb -> {
                         // Prefix: onServerStart(this)
                         cb.aload(0);
-                        cb.invokestatic(
-                                ClassDesc.of("com.graalagent.bridge.AgentBridge"),
-                                "onServerStart",
-                                MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V")
-                        );
+                        cb.invokestatic(CD_AGENT_BRIDGE, "onServerStart", MTD_ON_SERVER_START);
 
                         // Around: 调用影子方法
                         MethodVirtualizer.emitShadowInvocation(
                                 cb,
-                                ClassDesc.of("net.minecraft.server.MinecraftServer"),
+                                CD_SERVER,
                                 "$$shadow$runServer",
                                 mm.methodTypeSymbol(),
                                 false
                         );
 
                         // Postfix: onServerStop()
-                        cb.invokestatic(
-                                ClassDesc.of("com.graalagent.bridge.AgentBridge"),
-                                "onServerStop",
-                                MethodTypeDesc.ofDescriptor("()V")
-                        );
+                        cb.invokestatic(CD_AGENT_BRIDGE, "onServerStop", MTD_ON_SERVER_STOP);
                         cb.return_();
                     });
                     return;
                 }
 
                 // 2. reloadResources hook (virtualize to $$shadow$reloadResources)
-                if (methodName.equals("reloadResources")
-                        && methodDesc.equals("(Ljava/util/Collection;)Ljava/util/concurrent/CompletableFuture;")) {
+                if (mm.methodName().equalsString("reloadResources") && mm.methodTypeSymbol().equals(MTD_RELOAD_RESOURCES)) {
                     Logger.info("[ServerLifecyclePlugin] SMV Virtualizing MinecraftServer.reloadResources()...");
                     MethodVirtualizer.virtualize(builder, mm, "$$shadow$reloadResources", cb -> {
                         // 调用影子方法获得原始 CompletableFuture
                         MethodVirtualizer.emitShadowInvocation(
                                 cb,
-                                ClassDesc.of("net.minecraft.server.MinecraftServer"),
+                                CD_SERVER,
                                 "$$shadow$reloadResources",
                                 mm.methodTypeSymbol(),
                                 false
                         );
                         // 包装返回值触发 JS 自动热重载
-                        cb.invokestatic(
-                                ClassDesc.of("com.graalagent.bridge.AgentBridge"),
-                                "onServerReloadResources",
-                                MethodTypeDesc.ofDescriptor("(Ljava/util/concurrent/CompletableFuture;)Ljava/util/concurrent/CompletableFuture;")
-                        );
+                        cb.invokestatic(CD_AGENT_BRIDGE, "onServerReloadResources", MTD_ON_RELOAD_RESOURCES);
                         cb.areturn();
                     });
                     return;
