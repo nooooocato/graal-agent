@@ -18,6 +18,10 @@ public class AgentBridge {
         mockMultiplayer = value;
     }
 
+    public static void executeOnGameThread(Runnable task) {
+        // Red phase stub
+    }
+
     public static boolean isMultiplayer() {
         if (mockMultiplayer != null) {
             return mockMultiplayer;

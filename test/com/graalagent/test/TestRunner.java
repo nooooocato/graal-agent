@@ -25,6 +25,7 @@ public class TestRunner {
             // Default registered test suites
             addTestClassIfExists(testClasses, "com.graalagent.script.fs.ScriptFileSystemTest");
             addTestClassIfExists(testClasses, "com.graalagent.bridge.DualEnvironmentTest");
+            addTestClassIfExists(testClasses, "com.graalagent.bridge.AgentBridgeConvergenceTest");
             addTestClassIfExists(testClasses, "com.graalagent.bridge.MultiplayerCommandPassthroughTest");
             addTestClassIfExists(testClasses, "com.graalagent.server.ServerCommandTest");
             addTestClassIfExists(testClasses, "com.graalagent.server.ServerSandboxingTest");

@@ -17,6 +17,14 @@ public class EnvironmentContext {
         return new EnvironmentContext(AgentBridge.getMinecraft(), AgentBridge.getServer());
     }
 
+    public static void onInstanceCaptured(Object instance) {
+        // Red phase stub
+    }
+
+    public static boolean isCapturedWarmedUp() {
+        return false;
+    }
+
     public EnvironmentType getEnvironmentType() {
         if (clientInstance != null) {
             return EnvironmentType.CLIENT;
