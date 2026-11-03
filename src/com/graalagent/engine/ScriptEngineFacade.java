@@ -1,8 +1,13 @@
 package com.graalagent.engine;
 
+import com.graalagent.concurrency.AsyncWorkerPool;
 import com.graalagent.concurrency.ConcurrencyController;
+import com.graalagent.concurrency.WatchdogTimer;
 import com.graalagent.script.ScriptManager;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -14,12 +19,14 @@ public class ScriptEngineFacade {
 
     private final ScriptManager scriptManager;
     private final ConcurrencyController concurrencyController;
+    private final AsyncWorkerPool workerPool;
 
     public ScriptEngineFacade(ScriptManager scriptManager) {
         this.scriptManager = scriptManager;
         this.concurrencyController = (scriptManager != null && scriptManager.getConcurrencyController() != null)
                 ? scriptManager.getConcurrencyController()
                 : new ConcurrencyController();
+        this.workerPool = AsyncWorkerPool.getInstance();
         instance = this;
     }
 
@@ -49,6 +56,10 @@ public class ScriptEngineFacade {
         return scriptManager;
     }
 
+    public AsyncWorkerPool getWorkerPool() {
+        return workerPool;
+    }
+
     /**
      * 特权同步执行：供控制台或核心生命周期钩子调用
      */
@@ -56,26 +67,37 @@ public class ScriptEngineFacade {
         long start = System.currentTimeMillis();
         try {
             Object res = scriptManager != null ? scriptManager.evalInline(script) : null;
-            return new ExecutionResult(res, System.currentTimeMillis() - start, false, null);
+            return ExecutionResult.success(res, System.currentTimeMillis() - start);
         } catch (Throwable t) {
-            return new ExecutionResult(null, System.currentTimeMillis() - start, false, t);
+            return ExecutionResult.failure(t, System.currentTimeMillis() - start);
         }
     }
 
     /**
-     * 玩家零信任沙箱异步求值
+     * 玩家零信任沙箱异步求值：派发至 AsyncWorkerPool 并搭载 50ms 超时看门狗
      */
     public CompletableFuture<ExecutionResult> evalSandboxedAsync(String script, Object commandSource) {
-        // Phase 2 will wire this directly to AsyncWorkerPool + WatchdogTimer
-        return CompletableFuture.supplyAsync(() -> {
-            long start = System.currentTimeMillis();
-            try {
-                Object res = scriptManager != null ? scriptManager.evalSandboxed(script, commandSource) : null;
-                return new ExecutionResult(res, System.currentTimeMillis() - start, false, null);
-            } catch (Throwable t) {
-                return new ExecutionResult(null, System.currentTimeMillis() - start, false, t);
-            }
-        });
+        return evalSandboxedAsync(script, commandSource, WatchdogTimer.DEFAULT_BUDGET);
+    }
+
+    /**
+     * 玩家零信任沙箱异步求值，支持自定义超时预算
+     */
+    public CompletableFuture<ExecutionResult> evalSandboxedAsync(String script, Object commandSource, Duration timeout) {
+        Context sandboxContext = Context.newBuilder("js")
+                .allowHostAccess(HostAccess.NONE)
+                .option("js.ecmascript-version", "latest")
+                .build();
+        try {
+            sandboxContext.initialize("js");
+        } catch (Throwable ignored) {}
+
+        return workerPool.submitScript(sandboxContext, script, timeout)
+                .whenComplete((res, ex) -> {
+                    try {
+                        sandboxContext.close(true);
+                    } catch (Throwable ignored) {}
+                });
     }
 
     /**
@@ -96,5 +118,7 @@ public class ScriptEngineFacade {
         if (scriptManager != null) {
             scriptManager.stop();
         }
+        workerPool.shutdown();
+        WatchdogTimer.shutdown();
     }
 }
