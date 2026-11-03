@@ -42,14 +42,14 @@
     - [x] 运行 `verify-smv.ps1` 验证 5 大步实机插件链与字节码校验 100% 通过
 - [x] cff5acf Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4: 知识库文档事实与测试矩阵全量校准 (Documentation & Test Matrix Synchronization)
+## Phase 4: 知识库文档事实与测试矩阵全量校准 (Documentation & Test Matrix Synchronization) [checkpoint: b8daa0f]
 - [x] eb67e75 Task: 校准核心模块技术规范文档
     - [x] 校准 `docs/new_base/Module-Diagnostics-and-Logging.md` 中 `CrashDumpRecorder` 实例签名与参数顺序
     - [x] 校准 `docs/new_base/Module-Bridge-and-Dispatcher.md` 中 `EnvironmentContext` 实例模型描述
     - [x] 校准 `docs/new_base/Module-Bootstrap.md` 与实际 `AgentMain` 引导流程
-- [ ] Task: 校准测试矩阵、真实提交 Hash 与微插件形参
-    - [ ] 更新 `docs/new_base/Verification-and-Testing.md` 中 Phase 1 矩阵为真实测试方法名
-    - [ ] 将 `docs/new_base/Module-SMV-Mesh.md` 与 `Verification-and-Testing.md` 中的幽灵提交 `79c0da6` 替换为真实提交 `b4934c2`
-    - [ ] 修正 `Module-SMV-Mesh.md` 表格中 `KeyboardHandlerPlugin` 的形参签名
-    - [ ] 复核所有文档的相对链接与 WikiLinks 连通性
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] b8daa0f Task: 校准测试矩阵、真实提交 Hash 与微插件形参
+    - [x] 更新 `docs/new_base/Verification-and-Testing.md` 中 Phase 1 矩阵为真实测试方法名
+    - [x] 将 `docs/new_base/Module-SMV-Mesh.md` 与 `Verification-and-Testing.md` 中的幽灵提交 `79c0da6` 替换为真实提交 `b4934c2`
+    - [x] 修正 `Module-SMV-Mesh.md` 表格中 `KeyboardHandlerPlugin` 的形参签名
+    - [x] 复核所有文档的相对链接与 WikiLinks 连通性
+- [x] b8daa0f Task: Phase Verification & Checkpoint (Refer to workflow.md)
