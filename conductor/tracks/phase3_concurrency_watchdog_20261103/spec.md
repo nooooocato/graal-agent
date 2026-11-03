@@ -32,6 +32,11 @@
 - 基于 `CopyOnWriteArrayList` 实现事件监听器管理；
 - 支持事件优先级（`LOWEST`, `NORMAL`, `HIGH`, `MONITOR`）与取消标记传递（`Cancellable`）。
 
+### 6. 系统容器单线程互斥与防并发踩踏 (`ContextLock / Single-Threaded Polyglot Protection`)
+- 遵循 GraalVM Polyglot 单容器单线程底层物理约束；
+- 当不同 JVM 线程（如 `Server thread`、`Worker-Main-X` 数据包并行加载线程、类加载异步探测线程）并发回调进入系统级 JS Context 时，通过微观重入互斥锁（`contextLock`）进行纳秒/微秒级串行化互斥保护；
+- 彻底杜绝并发踏入引发的 `java.lang.IllegalStateException: Multi threaded access requested by thread ... but is not allowed for language(s) js` 崩溃。
+
 ---
 
 ## Non-Functional Requirements
@@ -43,4 +48,5 @@
 ## Acceptance Criteria
 - [ ] 针对异步 Worker 执行死循环 `while(true) {}` 的单元测试通过，验证看门狗在 50ms 左右精准抛出中断异常，且调用线程顺利返回；
 - [ ] 针对并发多线程往 `TransactionBuffer` 投递 Action 的测试通过，验证在模拟主线程批量 flush 时数据 100% 正确应用；
+- [ ] 针对多线程并发踏入系统 Context（如并发 evalInline / applyCustomTransformers 与 onTick）的测试通过，验证 100% 串行化，零 PolyglotThreadAccessException；
 - [ ] 验证主循环在频繁触发热重载时保持非阻塞。
