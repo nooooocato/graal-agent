@@ -31,10 +31,10 @@
     - [x] 创建 `com.graalagent.concurrency.TransactionAction` 函数式接口
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 96df910
 
-## Phase 4: 无锁并发事件总线 (LockFreeEventBus)
+## Phase 4: 无锁并发事件总线 (LockFreeEventBus) [checkpoint: 9639604]
 - [x] Task: 编写 LockFreeEventBus 优先级与取消机制测试 (Red Phase) c14e9a2
     - [x] 验证高优先级监听器优先执行且可阻断后续派发
 - [x] Task: 实现 LockFreeEventBus (Green Phase) 7474c38
     - [x] 创建 `com.graalagent.script.event.LockFreeEventBus`
     - [x] 支持基于 `CopyOnWriteArrayList` 的高并发无锁只读遍历
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 9639604
