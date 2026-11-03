@@ -47,4 +47,43 @@ public class AsyncWorkerPoolTest {
         Assert.assertNotNull(result.error(), "Error should be present");
         Assert.assertTrue(result.formatChatMessage().contains("脚本错误"), "Format message should report script error: " + result.formatChatMessage());
     }
+
+    public void testConcurrentAsyncBatchWithGuestCallbacks() throws Exception {
+        java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("graalagent-asyncbatch-test-");
+        try {
+            com.graalagent.script.ScriptManager sm = new com.graalagent.script.ScriptManager(tempDir.toFile());
+            sm.start();
+
+            sm.evalInline("""
+                globalThis.completedCount = 0;
+                globalThis.totalTasks = 20;
+                const facade = com.graalagent.engine.ScriptEngineFacade.getInstance();
+                for (let i = 0; i < globalThis.totalTasks; i++) {
+                    facade.evalSandboxedAsync(`${i} + 1`, null).thenAccept(res => {
+                        globalThis.completedCount++;
+                    });
+                }
+            """);
+
+            long start = System.currentTimeMillis();
+            boolean allDone = false;
+            while (System.currentTimeMillis() - start < 5000) {
+                Object completed = sm.evalInline("globalThis.completedCount");
+                if ("20".equals(String.valueOf(completed))) {
+                    allDone = true;
+                    break;
+                }
+                Thread.sleep(50);
+            }
+
+            Assert.assertTrue(allDone, "All 20 async tasks should complete their guest callbacks, completed: " + sm.evalInline("globalThis.completedCount"));
+            sm.stop();
+        } finally {
+            try (var stream = java.nio.file.Files.walk(tempDir)) {
+                stream.sorted(java.util.Comparator.reverseOrder())
+                        .map(java.nio.file.Path::toFile)
+                        .forEach(java.io.File::delete);
+            }
+        }
+    }
 }
