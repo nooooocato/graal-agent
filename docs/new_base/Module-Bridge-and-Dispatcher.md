@@ -191,25 +191,42 @@ BrigadierAdapter.literal("js")
 ```java
 package com.graalagent.bridge;
 
-public final class EnvironmentContext {
+public class EnvironmentContext {
+    private final Object clientInstance;
+    private final Object serverInstance;
+
+    public EnvironmentContext(Object clientInstance, Object serverInstance);
+
+    /** 获取绑定当前活跃客户端/服务端的实时上下文实例门面 */
+    public static EnvironmentContext getLiveContext();
+
+    /** 实例捕获通知与第二阶段句柄预热触发 */
+    public static void onInstanceCaptured(Object instance);
+    public static boolean isCapturedWarmedUp();
+
+    /** 环境类型及状态判断 */
+    public EnvironmentType getEnvironmentType();
     /** 判断当前是否运行在客户端环境 */
-    public static boolean isClient();
+    public boolean isClient();
+    public boolean isDedicatedServer();
 
     /** 判断当前是否运行在独立服务端环境 */
-    public static boolean isServer();
+    public boolean isServer();
+    public Object getClient();
+    public Object getServer();
 
-    /** 判断当前线程是否已经是目标上下文的主循环线程 */
-    public static boolean isSameThread(Object context);
+
+
 
     /**
      * 主线程安全分发：若已在主循环线程则直接执行；若在异步线程则派发至原版 execute 队列
      */
-    public static void execute(Object targetContext, Runnable task);
+    public void execute(Runnable runnable);
 
     /**
      * 全服富文本广播：通过 PlayerList.broadcastSystemMessage 发送消息
      */
-    public static void broadcastMessage(Object message);
+    public void broadcastMessage(String message);
 }
 ```
 

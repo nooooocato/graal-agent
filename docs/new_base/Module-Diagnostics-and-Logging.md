@@ -168,29 +168,32 @@ package com.graalagent.diagnostics;
 import java.io.File;
 import java.util.Map;
 
-public final class CrashDumpRecorder {
+public class CrashDumpRecorder {
+
+    public CrashDumpRecorder();
+    public CrashDumpRecorder(File dumpDir);
 
     /**
      * 捕获并落盘故障转储快照文件
      *
-     * @param triggerContext   故障触发上下文说明 (如 "SMV Bytecode Transformation")
-     * @param throwable        未捕获的根因异常
-     * @param extraDiagnostics 额外的诊断元数据键值对
+     * @param error            未捕获的根因异常
+     * @param contextInfo      故障触发上下文说明 (如 "SMV Bytecode Transformation")
+     * @param extraState       额外的诊断元数据键值对
      * @return 成功生成的 .dump 物理文件句柄
      */
-    public static File recordCrash(
-            String triggerContext,
-            Throwable throwable,
-            Map<String, Object> extraDiagnostics
+    public File recordCrash(
+            Throwable error,
+            String contextInfo,
+            Map<String, Object> extraState
     );
 
     /**
      * 生成标准格式化转储文本内容
      */
-    public static String generateDumpContent(
-            String triggerContext,
-            Throwable throwable,
-            Map<String, Object> extraDiagnostics
+    public String formatDump(
+            Throwable error,
+            String contextInfo,
+            Map<String, Object> extraState
     );
 }
 ```

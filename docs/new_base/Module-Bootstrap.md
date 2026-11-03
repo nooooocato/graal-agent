@@ -22,7 +22,7 @@ tags:
 - **依赖注入与确定性校验器**：[`src/com/graalagent/bootstrap/LibraryInjector.java`](../../src/com/graalagent/bootstrap/LibraryInjector.java)
 - **Bundler 启动器脱壳微插件**：[`src/com/graalagent/transformer/plugins/BundlerPlugin.java`](../../src/com/graalagent/transformer/plugins/BundlerPlugin.java)
 - **Agent 主入口与编排器**：[`src/com/graalagent/AgentMain.java`](../../src/com/graalagent/AgentMain.java)
-- **引导层离线自动化测试**：[`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java)
+- **引导层离线自动化测试**：[`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java) 及 [`test/com/graalagent/bootstrap/AgentMainBootstrapTest.java`](../../test/com/graalagent/bootstrap/AgentMainBootstrapTest.java)
 
 ---
 
@@ -229,11 +229,12 @@ public class BundlerPlugin implements ClassTransformPlugin {
 
 ## 🧪 验证与测试覆盖
 
-单元测试位于 [`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java)，验证指标如下：
+单元测试位于 [`test/com/graalagent/bootstrap/BootstrapTest.java`](../../test/com/graalagent/bootstrap/BootstrapTest.java) 与 [`test/com/graalagent/bootstrap/AgentMainBootstrapTest.java`](../../test/com/graalagent/bootstrap/AgentMainBootstrapTest.java)，验证指标如下：
 1. **默认路径决议**：验证无外部参数传入时，系统自适应定位到 Agent 所在目录同级的 `scripts/`、`lib/` 与 `agent.log`；
 2. **命令行解析健壮性**：验证逗号分隔字符串的健壮解析能力，键名不区分大小写，布尔值准确决议；
 3. **确定性关键类验证**：验证系统类加载器中 GraalVM 关键依赖类的探针逻辑；
-4. **缺失依赖精准感知**：验证模拟缺失类时能准确返回缺失类名列表。
+4. **缺失依赖精准感知**：验证模拟缺失类时能准确返回缺失类名列表；
+5. **Agent 引导与异常转储挂载**：验证 `AgentMain` 启动时参数解析与 `DiagnosticsHub` 联通，以及未捕获异常自动触发 `CrashDumpRecorder` 落盘快照。
 
 ---
 
