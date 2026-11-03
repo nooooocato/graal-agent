@@ -1,9 +1,9 @@
 # Implementation Plan: 第一/二阶段接线闭环、字节码标称类型重构与文档校准 (Foundation Wireup, Nominal Class-File Refactor & Doc Alignment)
 
 ## Phase 1: 引导编排与高可用基础设施闭环 (Bootstrap & Telemetry Wireup)
-- [ ] Task: 编写 AgentMain 引导编排与异常转储测试 (Red Phase)
-    - [ ] 编写针对 AgentConfig 与 LibraryInjector 在 Agent 引导链路中的集成测试
-    - [ ] 编写针对未捕获异常自动触发 CrashDumpRecorder 落盘转储的单元测试
+- [x] 8478828 Task: 编写 AgentMain 引导编排与异常转储测试 (Red Phase)
+    - [x] 编写针对 AgentConfig 与 LibraryInjector 在 Agent 引导链路中的集成测试
+    - [x] 编写针对未捕获异常自动触发 CrashDumpRecorder 落盘转储的单元测试
 - [ ] Task: 实现 AgentMain 引导重构与全局异常挂载 (Green Phase)
     - [ ] 在 `AgentMain.java` 中接入 `AgentConfig.parse` 并动态配置 `DiagnosticsHub` 级别与日志文件
     - [ ] 在 `AgentMain.java` 中接入 `LibraryInjector.injectLibraries` 与依赖门禁探测
