@@ -2,6 +2,9 @@
 
 ---
 
+- [ ] **Track: 第一/二阶段接线闭环、字节码标称类型重构与文档校准 (Foundation Wireup, Nominal Class-File Refactor & Doc Alignment)**
+  *Link: [./tracks/foundation_wireup_and_style_alignment_20261103/index.md](./tracks/foundation_wireup_and_style_alignment_20261103/index.md)*
+
 - [ ] **Track: 第三阶段：核心并发、看门狗防卡死与事务缓冲 (Concurrency, Watchdog & Transaction Buffer)**
   *Link: [./tracks/phase3_concurrency_watchdog_20261103/index.md](./tracks/phase3_concurrency_watchdog_20261103/index.md)*
 
