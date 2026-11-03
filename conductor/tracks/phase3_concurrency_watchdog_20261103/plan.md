@@ -9,8 +9,8 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) ef45c27
 
 ## Phase 2: 异步 Worker 线程池与看门狗 (AsyncWorker & Watchdog)
-- [ ] Task: 编写 WatchdogTimer 中断死循环单元测试 (Red Phase)
-    - [ ] 编写测试案例：执行 `while(true){}`，期望 50ms 触发 `PolyglotException.isCancelled()`
+- [x] Task: 编写 WatchdogTimer 中断死循环单元测试 (Red Phase) b4eda17
+    - [x] 编写测试案例：执行 `while(true){}`，期望 50ms 触发 `PolyglotException.isCancelled()`
 - [ ] Task: 实现 AsyncWorkerPool 与 WatchdogTimer (Green Phase)
     - [ ] 创建 `com.graalagent.concurrency.AsyncWorkerPool`
     - [ ] 创建 `com.graalagent.concurrency.WatchdogTimer` 与 `WatchdogToken`
