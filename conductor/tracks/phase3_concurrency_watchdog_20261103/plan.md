@@ -26,10 +26,10 @@
 - [x] Task: 编写 TransactionBuffer 并发入队与主线程批处理测试 (Red Phase) 6fd01e1
     - [x] 多线程并发并发投递 1000 个 Action 测试
     - [x] 模拟主线程单批次处理上限（MAX_BATCH）截断测试
-- [ ] Task: 实现 TransactionBuffer 与核心 Action 接口 (Green Phase)
-    - [ ] 创建 `com.graalagent.concurrency.TransactionBuffer`
-    - [ ] 创建 `com.graalagent.concurrency.TransactionAction` 函数式接口
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: 实现 TransactionBuffer 与核心 Action 接口 (Green Phase) b964e2d
+    - [x] 创建 `com.graalagent.concurrency.TransactionBuffer`
+    - [x] 创建 `com.graalagent.concurrency.TransactionAction` 函数式接口
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 无锁并发事件总线 (LockFreeEventBus)
 - [ ] Task: 编写 LockFreeEventBus 优先级与取消机制测试 (Red Phase)
