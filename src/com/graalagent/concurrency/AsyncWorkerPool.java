@@ -52,6 +52,10 @@ public class AsyncWorkerPool {
         instance = pool;
     }
 
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
     /**
      * 提交并在指定 Context 中异步执行 JavaScript 脚本求值，绑定 Watchdog 超时看护
      *

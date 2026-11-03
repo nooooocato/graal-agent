@@ -92,6 +92,36 @@ public class AgentAPI {
         return AgentBridge.getServer();
     }
 
+    public void defer(Value action) {
+        if (action != null && action.canExecute()) {
+            com.graalagent.concurrency.TransactionBuffer.enqueue(serverCtx -> {
+                try {
+                    if (action.canExecute()) {
+                        action.execute(serverCtx);
+                    }
+                } catch (Throwable t) {
+                    Logger.error("Error executing deferred transaction action", t);
+                }
+            });
+        }
+    }
+
+    public void runAsync(Value callback) {
+        if (callback != null && callback.canExecute()) {
+            com.graalagent.concurrency.AsyncWorkerPool.getInstance().getExecutor().submit(() -> {
+                scriptManager.getConcurrencyController().executeRead(() -> {
+                    try {
+                        if (callback.canExecute()) {
+                            callback.execute();
+                        }
+                    } catch (Throwable t) {
+                        Logger.error("Error executing runAsync callback", t);
+                    }
+                });
+            });
+        }
+    }
+
     public void execute(Value callback) {
         if (callback != null && callback.canExecute()) {
             com.graalagent.bridge.EnvironmentContext.getLiveContext().execute(() -> {
