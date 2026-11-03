@@ -14,9 +14,9 @@
 - [x] 5cbf381 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 桥接层反射清零与句柄池双阶段预热 (AgentBridge MH Convergence & Dual-Phase Warmup)
-- [ ] Task: 编写 AgentBridge 句柄收敛与预热单测 (Red Phase)
-    - [ ] 编写针对 AgentBridge 通过 MethodHandleCache 调度聊天发送与跨端判断的测试
-    - [ ] 编写双阶段安全预热机制在实例捕获时的触发测试
+- [x] 13d3466 Task: 编写 AgentBridge 句柄收敛与预热单测 (Red Phase)
+    - [x] 编写针对 AgentBridge 通过 MethodHandleCache 调度聊天发送与跨端判断的测试
+    - [x] 编写双阶段安全预热机制在实例捕获时的触发测试
 - [ ] Task: 实现 AgentBridge 裸反射收敛与预热逻辑 (Green Phase)
     - [ ] 将 `AgentBridge.sendChatMessage` 中的裸反射与字段缓存重构为 `MethodHandleCache` 句柄调用
     - [ ] 将 `AgentBridge.isMultiplayer` 与 `onServerReloadResources` 中的裸反射收敛至句柄池
