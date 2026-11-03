@@ -96,4 +96,75 @@ public class ConcurrencyControllerTest {
         Assert.assertTrue(doneLatch.await(2, TimeUnit.SECONDS), "All concurrent tick threads should finish");
         Assert.assertEquals(threadCount, successCount.get());
     }
+
+    public void testScriptManagerNonBlockingTick() throws Exception {
+        java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("graalagent-concurrency-test-");
+        try {
+            com.graalagent.script.ScriptManager sm = new com.graalagent.script.ScriptManager(tempDir.toFile());
+            sm.start();
+
+            // Normal tick executes
+            boolean tick1 = sm.onTick();
+            Assert.assertTrue(tick1, "Initial onTick should succeed");
+
+            CountDownLatch reloadStarted = new CountDownLatch(1);
+            CountDownLatch canFinishReload = new CountDownLatch(1);
+
+            Thread reloadThread = new Thread(() -> {
+                sm.getConcurrencyController().executeExclusiveReload(() -> {
+                    reloadStarted.countDown();
+                    try {
+                        canFinishReload.await(2, TimeUnit.SECONDS);
+                    } catch (InterruptedException ignored) {}
+                });
+            });
+            reloadThread.setDaemon(true);
+            reloadThread.start();
+
+            Assert.assertTrue(reloadStarted.await(1, TimeUnit.SECONDS), "Reload should start");
+
+            long start = System.currentTimeMillis();
+            boolean tickSkipped = sm.onTick();
+            long duration = System.currentTimeMillis() - start;
+
+            Assert.assertFalse(tickSkipped, "onTick must return false and skip during active reload");
+            Assert.assertTrue(duration < 50, "onTick took " + duration + "ms, but must never block main thread");
+
+            canFinishReload.countDown();
+            reloadThread.join(2000);
+
+            boolean tickAfter = sm.onTick();
+            Assert.assertTrue(tickAfter, "onTick after reload should succeed");
+            sm.stop();
+        } finally {
+            try (var stream = java.nio.file.Files.walk(tempDir)) {
+                stream.sorted(java.util.Comparator.reverseOrder())
+                        .map(java.nio.file.Path::toFile)
+                        .forEach(java.io.File::delete);
+            }
+        }
+    }
+
+    public void testScriptEngineFacadeIntegration() throws Exception {
+        java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("graalagent-facade-test-");
+        try {
+            com.graalagent.script.ScriptManager sm = new com.graalagent.script.ScriptManager(tempDir.toFile());
+            sm.start();
+
+            com.graalagent.engine.ScriptEngineFacade facade = com.graalagent.engine.ScriptEngineFacade.getInstance();
+            Assert.assertNotNull(facade, "ScriptEngineFacade should be initialized");
+            Assert.assertNotNull(facade.getConcurrencyController(), "ConcurrencyController should not be null");
+
+            com.graalagent.engine.ExecutionResult result = facade.evalPrivileged("21 * 2");
+            Assert.assertTrue(result.isSuccess(), "evalPrivileged should succeed");
+            Assert.assertEquals("42", String.valueOf(result.returnValue()));
+            sm.stop();
+        } finally {
+            try (var stream = java.nio.file.Files.walk(tempDir)) {
+                stream.sorted(java.util.Comparator.reverseOrder())
+                        .map(java.nio.file.Path::toFile)
+                        .forEach(java.io.File::delete);
+            }
+        }
+    }
 }

@@ -2,6 +2,8 @@ package com.graalagent.script;
 
 import com.graalagent.bridge.AgentBridge;
 import com.graalagent.bridge.brigadier.BrigadierAdapter;
+import com.graalagent.concurrency.ConcurrencyController;
+import com.graalagent.engine.ScriptEngineFacade;
 import com.graalagent.util.Logger;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
@@ -34,6 +36,7 @@ public class ScriptManager {
     private static final ThreadLocal<Object> currentCommandPlayer = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> commandExecutingFromConsole = new ThreadLocal<>();
 
+    private final ConcurrencyController concurrencyController = new ConcurrencyController();
     private final File scriptsDir;
     private final EventBus eventBus = new EventBus();
     private final AgentAPI agentAPI;
@@ -50,10 +53,15 @@ public class ScriptManager {
         com.graalagent.datapack.DatapackManager.setScriptsDir(scriptsDir);
         this.agentAPI = new AgentAPI(scriptsDir, this);
         instance = this;
+        new ScriptEngineFacade(this);
     }
 
     public static ScriptManager getInstance() {
         return instance;
+    }
+
+    public ConcurrencyController getConcurrencyController() {
+        return concurrencyController;
     }
 
     public static synchronized void init(File scriptsDir) {
@@ -92,7 +100,7 @@ public class ScriptManager {
         startWatcher();
     }
 
-    public synchronized void registerCustomTransformer(Value callback) {
+    public void registerCustomTransformer(Value callback) {
         if (callback != null && callback.canExecute()) {
             customTransformers.add(callback);
         }
@@ -113,41 +121,45 @@ public class ScriptManager {
         return Collections.unmodifiableMap(customCommands);
     }
 
-    public synchronized byte[] applyCustomTransformers(String className, byte[] bytes) {
+    public byte[] applyCustomTransformers(String className, byte[] bytes) {
         if (customTransformers.isEmpty() || context == null) {
             return null;
         }
 
-        byte[] current = bytes;
-        for (Value custom : customTransformers) {
-            try {
-                Value result = custom.execute(className, current);
-                if (result != null && result.hasArrayElements()) {
-                    long size = result.getArraySize();
-                    byte[] modified = new byte[(int) size];
-                    for (int i = 0; i < size; i++) {
-                        modified[i] = (byte) result.getArrayElement(i).asInt();
+        return concurrencyController.executeReadWithResult(() -> {
+            byte[] current = bytes;
+            for (Value custom : customTransformers) {
+                try {
+                    Value result = custom.execute(className, current);
+                    if (result != null && result.hasArrayElements()) {
+                        long size = result.getArraySize();
+                        byte[] modified = new byte[(int) size];
+                        for (int i = 0; i < size; i++) {
+                            modified[i] = (byte) result.getArrayElement(i).asInt();
+                        }
+                        current = modified;
                     }
-                    current = modified;
+                } catch (Throwable t) {
+                    Logger.error("Error in custom JS transformer for class " + className, t);
                 }
-            } catch (Throwable t) {
-                Logger.error("Error in custom JS transformer for class " + className, t);
             }
-        }
-        return (current != bytes) ? current : null;
+            return (current != bytes) ? current : null;
+        });
     }
 
-    public synchronized void executeCallback(Value callback, Object... args) {
+    public void executeCallback(Value callback, Object... args) {
         if (callback != null && callback.canExecute() && context != null) {
-            try {
-                callback.execute(args);
-            } catch (Throwable t) {
-                Logger.error("Error executing callback", t);
-            }
+            concurrencyController.executeRead(() -> {
+                try {
+                    callback.execute(args);
+                } catch (Throwable t) {
+                    Logger.error("Error executing callback", t);
+                }
+            });
         }
     }
 
-    private synchronized void initContext() {
+    private void initContext() {
         if (context != null) {
             try {
                 context.close(true);
@@ -178,20 +190,22 @@ public class ScriptManager {
         Logger.info("JavaScript Polyglot Context initialized successfully.");
     }
 
-    public synchronized void reload() {
-        Logger.info("Reloading JavaScript scripts from " + scriptsDir.getAbsolutePath() + "...");
-        initContext();
-        loadAllScripts();
+    public void reload() {
+        concurrencyController.executeExclusiveReload(() -> {
+            Logger.info("Reloading JavaScript scripts from " + scriptsDir.getAbsolutePath() + "...");
+            initContext();
+            loadAllScripts();
 
-        Object s = AgentBridge.getServer();
-        if (s != null) {
-            com.graalagent.server.ServerCommandDispatcher.syncCommandsToPlayers(s);
-        }
+            Object s = AgentBridge.getServer();
+            if (s != null) {
+                com.graalagent.server.ServerCommandDispatcher.syncCommandsToPlayers(s);
+            }
 
-        AgentBridge.sendChatMessage("§a[Graal-JS-Agent] 脚本全部重新加载成功！");
+            AgentBridge.sendChatMessage("§a[Graal-JS-Agent] 脚本全部重新加载成功！");
+        });
     }
 
-    public synchronized void loadAllScripts() {
+    public void loadAllScripts() {
         File[] files = scriptsDir.listFiles((dir, name) -> name.endsWith(".js"));
         if (files == null || files.length == 0) {
             Logger.info("No JavaScript scripts found in " + scriptsDir.getAbsolutePath());
@@ -210,87 +224,99 @@ public class ScriptManager {
         }
     }
 
-    public synchronized void loadScriptFile(File file) {
-        try {
-            Logger.info("Executing script: " + file.getName());
-            Source source = Source.newBuilder("js", file).encoding(StandardCharsets.UTF_8).build();
-            context.eval(source);
-        } catch (Throwable t) {
-            Logger.error("Error executing script " + file.getName(), t);
-            AgentBridge.sendChatMessage("§c[Graal-JS-Agent] 错误 (" + file.getName() + "): §f" + t.getMessage());
-        }
-    }
-
-    public synchronized Object evalInline(String code) {
-        if (context == null) return null;
-        try {
-            Value result = context.eval("js", code);
-            if (result == null || result.isNull()) return "null";
-            if (result.isHostObject()) return result.asHostObject();
-            return result.toString();
-        } catch (Throwable t) {
-            return "Error: " + t.getMessage();
-        }
-    }
-
-    public synchronized Object evalSandboxed(String code, Object player) throws Exception {
-        if (context == null) throw new IllegalStateException("Context not initialized");
-        try {
-            com.graalagent.security.ScriptSandbox.setSandboxed(true);
-            setCommandExecutionContext(player, false);
-            Value result = context.eval("js", code);
-            if (result == null || result.isNull()) return "null";
-            if (result.isHostObject()) return result.asHostObject();
-            return result.toString();
-        } finally {
-            clearCommandExecutionContext();
-            com.graalagent.security.ScriptSandbox.clear();
-        }
-    }
-
-    public synchronized void onTick() {
-        if (!gameInitialized) {
-            Object mc = AgentBridge.getMinecraft();
-            if (mc != null) {
-                gameInitialized = true;
-                Logger.info("Minecraft instance ready. Emitting 'init' event.");
-                eventBus.emit("init", mc);
+    public void loadScriptFile(File file) {
+        concurrencyController.executeRead(() -> {
+            try {
+                Logger.info("Executing script: " + file.getName());
+                Source source = Source.newBuilder("js", file).encoding(StandardCharsets.UTF_8).build();
+                context.eval(source);
+            } catch (Throwable t) {
+                Logger.error("Error executing script " + file.getName(), t);
+                AgentBridge.sendChatMessage("§c[Graal-JS-Agent] 错误 (" + file.getName() + "): §f" + t.getMessage());
             }
-        }
-        eventBus.emit("tick");
+        });
     }
 
-    public synchronized void onServerStart(Object server) {
-        if (!gameInitialized) {
-            gameInitialized = true;
-            Logger.info("MinecraftServer ready. Emitting 'serverInit' and 'init' events.");
-            eventBus.emit("serverInit", server);
-            eventBus.emit("init", server);
-        }
+    public Object evalInline(String code) {
+        return concurrencyController.executeReadWithResult(() -> {
+            if (context == null) return null;
+            try {
+                Value result = context.eval("js", code);
+                if (result == null || result.isNull()) return "null";
+                if (result.isHostObject()) return result.asHostObject();
+                return result.toString();
+            } catch (Throwable t) {
+                return "Error: " + t.getMessage();
+            }
+        });
     }
 
-    public synchronized void onServerTick(Object server) {
-        if (AgentBridge.getMinecraft() == null) {
+    public Object evalSandboxed(String code, Object player) throws Exception {
+        return concurrencyController.executeReadWithResultThrows(() -> {
+            if (context == null) throw new IllegalStateException("Context not initialized");
+            try {
+                com.graalagent.security.ScriptSandbox.setSandboxed(true);
+                setCommandExecutionContext(player, false);
+                Value result = context.eval("js", code);
+                if (result == null || result.isNull()) return "null";
+                if (result.isHostObject()) return result.asHostObject();
+                return result.toString();
+            } finally {
+                clearCommandExecutionContext();
+                com.graalagent.security.ScriptSandbox.clear();
+            }
+        });
+    }
+
+    public boolean onTick() {
+        return concurrencyController.tryExecuteTickRead(() -> {
+            if (!gameInitialized) {
+                Object mc = AgentBridge.getMinecraft();
+                if (mc != null) {
+                    gameInitialized = true;
+                    Logger.info("Minecraft instance ready. Emitting 'init' event.");
+                    eventBus.emit("init", mc);
+                }
+            }
+            eventBus.emit("tick");
+        });
+    }
+
+    public void onServerStart(Object server) {
+        concurrencyController.executeRead(() -> {
             if (!gameInitialized) {
                 gameInitialized = true;
-                Logger.info("Dedicated server tick initialized. Emitting 'serverInit' and 'init' events.");
+                Logger.info("MinecraftServer ready. Emitting 'serverInit' and 'init' events.");
                 eventBus.emit("serverInit", server);
                 eventBus.emit("init", server);
             }
-            eventBus.emit("tick");
-        }
-        eventBus.emit("serverTick", server);
+        });
     }
 
-    public synchronized void onServerStop() {
-        eventBus.emit("serverStop");
+    public boolean onServerTick(Object server) {
+        return concurrencyController.tryExecuteTickRead(() -> {
+            if (AgentBridge.getMinecraft() == null) {
+                if (!gameInitialized) {
+                    gameInitialized = true;
+                    Logger.info("Dedicated server tick initialized. Emitting 'serverInit' and 'init' events.");
+                    eventBus.emit("serverInit", server);
+                    eventBus.emit("init", server);
+                }
+                eventBus.emit("tick");
+            }
+            eventBus.emit("serverTick", server);
+        });
     }
 
-    public synchronized boolean onKey(long window, int key, Object event) {
-        return eventBus.emit("key", window, key, event);
+    public void onServerStop() {
+        concurrencyController.executeRead(() -> eventBus.emit("serverStop"));
     }
 
-    public synchronized boolean onSendChat(String message) {
+    public boolean onKey(long window, int key, Object event) {
+        return concurrencyController.executeReadWithResult(() -> eventBus.emit("key", window, key, event));
+    }
+
+    public boolean onSendChat(String message) {
         if (message == null) return false;
 
         String trimmed = message.trim();
@@ -307,10 +333,10 @@ public class ScriptManager {
         }
 
         // Emit chat event for custom script handlers
-        return eventBus.emit("chat", message);
+        return concurrencyController.executeReadWithResult(() -> eventBus.emit("chat", message));
     }
 
-    public synchronized boolean onSendCommand(String command) {
+    public boolean onSendCommand(String command) {
         if (command == null) return false;
 
         String trimmed = command.trim();
