@@ -29,14 +29,14 @@
 ## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor)
 - [x] 524ab1b Task: 编写微插件标称类型匹配断言测试 (Red Phase)
     - [x] 针对 8 大微插件编写验证其 ClassDesc / MethodTypeDesc 符号匹配与字节码生成的专用断言
-- [ ] Task: 重构 8 大微插件与 MethodVirtualizer 为标称类型 (Green Phase)
-    - [ ] 重构 `BundlerPlugin`：使用 `ClassDesc` 与 `ConstantDescs.CD_String.arrayType()` 匹配 `run` 方法与 `getParent` 指令
-    - [ ] 重构 `ClientTickPlugin`：使用 `ClassDesc.of("net.minecraft.client.Minecraft")` 与 `MethodTypeDesc.of(ConstantDescs.CD_void)` 标称匹配
-    - [ ] 重构 `KeyboardHandlerPlugin`：消除字符串描述符，使用标称类型匹配 `keyPress(long, int, KeyEvent)`
-    - [ ] 重构 `PacketListenerPlugin`：消除 `sendChat`、`sendCommand`、`handleCommands` 原始描述符
-    - [ ] 重构 `ServerLifecyclePlugin` 与 `ServerTickPlugin`：使用标称类型匹配生命周期与 tick 方法
-    - [ ] 重构 `CommandsInitPlugin` 与 `PackRepositoryPlugin`：消除构造函数与指令集合原始描述符
-    - [ ] 统一重构 `MethodVirtualizer` 通用分发桩生成器为纯标称类型 API
+- [x] 0fde588 Task: 重构 8 大微插件与 MethodVirtualizer 为标称类型 (Green Phase)
+    - [x] 重构 `BundlerPlugin`：使用 `ClassDesc` 与 `ConstantDescs.CD_String.arrayType()` 匹配 `run` 方法与 `getParent` 指令
+    - [x] 重构 `ClientTickPlugin`：使用 `ClassDesc.of("net.minecraft.client.Minecraft")` 与 `MethodTypeDesc.of(ConstantDescs.CD_void)` 标称匹配
+    - [x] 重构 `KeyboardHandlerPlugin`：消除字符串描述符，使用标称类型匹配 `keyPress(long, int, KeyEvent)`
+    - [x] 重构 `PacketListenerPlugin`：消除 `sendChat`、`sendCommand`、`handleCommands` 原始描述符
+    - [x] 重构 `ServerLifecyclePlugin` 与 `ServerTickPlugin`：使用标称类型匹配生命周期与 tick 方法
+    - [x] 重构 `CommandsInitPlugin` 与 `PackRepositoryPlugin`：消除构造函数与指令集合原始描述符
+    - [x] 统一重构 `MethodVirtualizer` 通用分发桩生成器为纯标称类型 API
 - [ ] Task: 运行全量离线单测与 SMV 实机验证总线 (Refactor Phase)
     - [ ] 运行 `run-tests.ps1` 确保 63 个单元测试全部通过
     - [ ] 运行 `verify-smv.ps1` 验证 5 大步实机插件链与字节码校验 100% 通过
