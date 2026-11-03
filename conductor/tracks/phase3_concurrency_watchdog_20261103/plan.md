@@ -8,7 +8,7 @@
     - [x] 实现非阻塞的 `onTick()` 与安全的独占式 `reload()`
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) ef45c27
 
-## Phase 2: 异步 Worker 线程池与看门狗 (AsyncWorker & Watchdog)
+## Phase 2: 异步 Worker 线程池与看门狗 (AsyncWorker & Watchdog) [checkpoint: ea4bbc4]
 - [x] Task: 编写 WatchdogTimer 中断死循环单元测试 (Red Phase) b4eda17
     - [x] 编写测试案例：执行 `while(true){}`，期望 50ms 触发 `PolyglotException.isCancelled()`
 - [x] Task: 实现 AsyncWorkerPool 与 WatchdogTimer (Green Phase) 6bf37c2
@@ -20,7 +20,7 @@
 - [x] Task: 系统容器单线程互斥与防并发踩踏 (ContextLock Protection) 090dd9f
     - [x] 编写多线程（如异步类加载器与主线程）并发踏入系统 Context 单元测试 (Red Phase) 65634a0
     - [x] 在 ConcurrencyController 与 ScriptManager 引入 contextLock 互斥，消除 Multi threaded access requested (Green Phase) 090dd9f
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) ea4bbc4
 
 ## Phase 3: 主线程事务缓冲队列 (TransactionBuffer)
 - [ ] Task: 编写 TransactionBuffer 并发入队与主线程批处理测试 (Red Phase)
