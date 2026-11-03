@@ -176,24 +176,35 @@ public class ServerCommandDispatcher {
         }
 
         ScriptManager sm = ScriptManager.getInstance();
-        Value callback = sm != null ? sm.getCustomCommands().get(cmdName) : null;
-
-        if (callback != null && callback.canExecute()) {
-            try {
-                ScriptManager.setCommandExecutionContext(player, isConsole);
-                callback.execute(argsStr, player, source);
-            } catch (Throwable t) {
-                String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
-                Logger.error("指令 /" + cmdName + " 执行报错: " + errorMsg, t);
-                sendFeedback(source, "§c[指令报错] /" + cmdName + ": " + errorMsg, false);
-                return 0;
-            } finally {
-                ScriptManager.clearCommandExecutionContext();
-            }
-        } else {
-            sendFeedback(source, "§c[指令错误] 未找到指令 /" + cmdName + " 的回调函数！", false);
+        if (sm == null) {
+            sendFeedback(source, "§c[指令错误] ScriptManager 未初始化", false);
+            return 0;
         }
-        return 1;
+
+        final Object finalPlayer = player;
+        final boolean finalIsConsole = isConsole;
+        final String finalArgsStr = argsStr;
+        final Object finalSource = source;
+        return sm.getConcurrencyController().executeReadWithResult(() -> {
+            Value callback = sm.getCustomCommands().get(cmdName);
+            if (callback != null && callback.canExecute()) {
+                try {
+                    ScriptManager.setCommandExecutionContext(finalPlayer, finalIsConsole);
+                    callback.execute(finalArgsStr, finalPlayer, finalSource);
+                    return 1;
+                } catch (Throwable t) {
+                    String errorMsg = t.getMessage() != null ? t.getMessage() : t.toString();
+                    Logger.error("指令 /" + cmdName + " 执行报错: " + errorMsg, t);
+                    sendFeedback(finalSource, "§c[指令报错] /" + cmdName + ": " + errorMsg, false);
+                    return 0;
+                } finally {
+                    ScriptManager.clearCommandExecutionContext();
+                }
+            } else {
+                sendFeedback(finalSource, "§c[指令错误] 未找到指令 /" + cmdName + " 的回调函数！", false);
+                return 0;
+            }
+        });
     }
 
     public static int handleJsExecution(Object context) {
