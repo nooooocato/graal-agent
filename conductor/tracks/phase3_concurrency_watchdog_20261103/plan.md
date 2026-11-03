@@ -17,9 +17,9 @@
     - [x] 实现针对超时调用 `context.interrupt(Duration.ZERO)` 的强行熔断
 - [x] Task: 熔断错误友好封装与重试机制 (Refactor Phase) 2359e90
     - [x] 编写优雅的错误消息与超时结果返回对象
-- [~] Task: 系统容器单线程互斥与防并发踩踏 (ContextLock Protection)
+- [x] Task: 系统容器单线程互斥与防并发踩踏 (ContextLock Protection) 090dd9f
     - [x] 编写多线程（如异步类加载器与主线程）并发踏入系统 Context 单元测试 (Red Phase) 65634a0
-    - [ ] 在 ConcurrencyController 与 ScriptManager 引入 contextLock 互斥，消除 Multi threaded access requested (Green Phase)
+    - [x] 在 ConcurrencyController 与 ScriptManager 引入 contextLock 互斥，消除 Multi threaded access requested (Green Phase) 090dd9f
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 主线程事务缓冲队列 (TransactionBuffer)
