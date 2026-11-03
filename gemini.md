@@ -1,4 +1,6 @@
 - 该项目中的所有文档都应该使用wiki-markdown读写
+- 本项目的 Java 规范基准是 JDK 24+（当前环境运行与编译采用 Oracle GraalVM JDK 25），全量采用标准 Class-File API。严禁使用已过时的 JDK 22+ 描述。
 - Minecraft 26+ 以上的所有版本，官方发布时已经不再发布映射也不混淆符号。可以用标准的工具进行读取。
 - 代码中符号混淆消失之后，本项目才得以 [[Shadow-Method-Virtualization|影子方法虚拟化]] 注入
 - 每个 Conductor Verification 阶段，要求额外做什么事情都必须用户明确回答确认无误才可以放行
+- markdown中对于本地文件的引用都应该采用相对路径

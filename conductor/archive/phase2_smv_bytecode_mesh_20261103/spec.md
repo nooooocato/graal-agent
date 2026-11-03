@@ -15,7 +15,7 @@
 ## Functional Requirements
 
 ### 1. 核心虚拟化器 (`MethodVirtualizer`)
-- 基于 JDK 22+ 原生 `java.lang.classfile` API 构建；
+- 基于 JDK 24+ 原生 `java.lang.classfile` API 构建；
 - 支持将类中的任何目标方法克隆并重命名为 `private synthetic $$shadow$<name>`，完整保留原方法的所有指令、局部变量表与异常表；
 - 将原方法槽位替换为虚拟分发桩（Virtual Dispatcher），支持嵌入前置（Prefix）、环绕（Around）、替换（Replace）与后置（Postfix）回调逻辑。
 

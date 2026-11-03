@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * 核心虚拟化器：基于 JDK 22+ java.lang.classfile 将目标方法克隆为私有合成影子方法 ($$shadow$<name>)，
+ * 核心虚拟化器：基于 JDK 24+ java.lang.classfile 将目标方法克隆为私有合成影子方法 ($$shadow$<name>)，
  * 并将原公开方法槽位重写为虚拟分发桩 (Virtual Dispatcher)。
  */
 public final class MethodVirtualizer {
