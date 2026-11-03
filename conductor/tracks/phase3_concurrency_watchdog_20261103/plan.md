@@ -22,14 +22,14 @@
     - [x] 在 ConcurrencyController 与 ScriptManager 引入 contextLock 互斥，消除 Multi threaded access requested (Green Phase) 090dd9f
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) ea4bbc4
 
-## Phase 3: 主线程事务缓冲队列 (TransactionBuffer)
+## Phase 3: 主线程事务缓冲队列 (TransactionBuffer) [checkpoint: 96df910]
 - [x] Task: 编写 TransactionBuffer 并发入队与主线程批处理测试 (Red Phase) 6fd01e1
     - [x] 多线程并发并发投递 1000 个 Action 测试
     - [x] 模拟主线程单批次处理上限（MAX_BATCH）截断测试
 - [x] Task: 实现 TransactionBuffer 与核心 Action 接口 (Green Phase) b964e2d
     - [x] 创建 `com.graalagent.concurrency.TransactionBuffer`
     - [x] 创建 `com.graalagent.concurrency.TransactionAction` 函数式接口
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) 96df910
 
 ## Phase 4: 无锁并发事件总线 (LockFreeEventBus)
 - [ ] Task: 编写 LockFreeEventBus 优先级与取消机制测试 (Red Phase)
