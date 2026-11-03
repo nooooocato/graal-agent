@@ -15,8 +15,8 @@
     - [x] 创建 `com.graalagent.concurrency.AsyncWorkerPool`
     - [x] 创建 `com.graalagent.concurrency.WatchdogTimer` 与 `WatchdogToken`
     - [x] 实现针对超时调用 `context.interrupt(Duration.ZERO)` 的强行熔断
-- [~] Task: 熔断错误友好封装与重试机制 (Refactor Phase)
-    - [ ] 编写优雅的错误消息与超时结果返回对象
+- [x] Task: 熔断错误友好封装与重试机制 (Refactor Phase) 2359e90
+    - [x] 编写优雅的错误消息与超时结果返回对象
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 主线程事务缓冲队列 (TransactionBuffer)
