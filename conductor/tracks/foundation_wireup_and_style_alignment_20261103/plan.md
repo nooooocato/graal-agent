@@ -21,9 +21,9 @@
     - [x] 将 `AgentBridge.sendChatMessage` 中的裸反射与字段缓存重构为 `MethodHandleCache` 句柄调用
     - [x] 将 `AgentBridge.isMultiplayer` 与 `onServerReloadResources` 中的裸反射收敛至句柄池
     - [x] 在 `AgentMain` 与 `EnvironmentContext` 中落地双阶段预热调用
-- [ ] Task: 清除 AgentBridge 废弃字段与回归验证 (Refactor Phase)
-    - [ ] 彻底清理 `AgentBridge` 内部无用的 `literalMethod`、`sendSystemMessageMethod`、`playerField` 等静态变量
-    - [ ] 运行 `run-tests.ps1` 验证桥接调用与指令透传测试通过
+- [x] ab47e04 Task: 清除 AgentBridge 废弃字段与回归验证 (Refactor Phase)
+    - [x] 彻底清理 `AgentBridge` 内部无用的 `literalMethod`、`sendSystemMessageMethod`、`playerField` 等静态变量
+    - [x] 运行 `run-tests.ps1` 验证桥接调用与指令透传测试通过
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor)
