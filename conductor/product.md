@@ -29,6 +29,12 @@
    - Built-in structured telemetry (`DiagnosticsHub`) and automated crash snapshots (`CrashDumpRecorder`).
    - Standardized UTF-8 encoding across Windows console, log files (`agent.log`), and game text components.
 
+7. **Concurrency, Preemptive Watchdog & MPSC Transaction Queue:**
+   - Decoupled game ticks and hot reloading via `ConcurrencyController` (`ReentrantReadWriteLock`), ensuring zero-freeze tick skipping during script reloads.
+   - `AsyncWorkerPool` offloads compute tasks and player `/js` execution; `WatchdogTimer` enforces a strict 50ms budget, preemptively interrupting infinite loops (`while(true){}`) to maintain a rock-solid 20.0 TPS.
+   - `TransactionBuffer` provides a lock-free MPSC queue for deferring async world mutations to the server main loop, with `MAX_BATCH_PER_TICK` (1000) batch truncation eliminating lag spikes and concurrency bugs.
+   - `LockFreeEventBus` delivers zero-lock 20 TPS event broadcasting with priority scheduling and cancellation control.
+
 ## Boundaries & Non-Goals
 - Avoids becoming a monolithic, heavy framework: keeps the Java core ultra-lightweight, pushing flexibility to JavaScript.
 - Prioritizes vanilla compatibility over client-side intrusive rendering hacks.

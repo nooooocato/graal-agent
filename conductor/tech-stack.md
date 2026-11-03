@@ -29,7 +29,11 @@
 - **Reflection & Invocation:** `MethodHandleCache` (cached `MethodHandle` resolution and static warmup for high-frequency game methods).
 
 ## 4. Concurrency, Diagnostics & File System
-- **Thread Safety:** Dispatching to client render thread (`mc.execute(...)`) and server tick thread (`server.execute(...)`).
+- **Concurrency Architecture:** `ConcurrencyController` (`ReentrantReadWriteLock` 分离每刻超高频非阻塞读锁与低频热重载排他写锁，配合 `contextLock` 严格保障 GraalJS 容器单线程串行化，杜绝 `Multi threaded access requested`)。
+- **Async Workers & Watchdog Interruption:** `AsyncWorkerPool`（异步工作线程池）剥离耗时计算与玩家 `/js` 求值；`WatchdogTimer`（50ms 时限看门狗抢占令牌）针对 `while(true){}` 死循环强制调用 `context.interrupt(Duration.ZERO)` / `context.close(true)` 强行熔断，保持游戏 20.0 TPS。
+- **Main-Thread Transaction Buffer:** `TransactionBuffer`（MPSC 无锁并发队列）收集异步线程的游戏世界写操作，在 `onServerTick()` 阶段原子批量消费，配置 `MAX_BATCH_PER_TICK = 1000` 截断防掉帧，彻底消除 `ConcurrentModificationException`。
+- **Lock-Free Event Bus:** `LockFreeEventBus`（基于 `CopyOnWriteArrayList` 的无锁并发事件总线），支持 6 级事件优先级 (`HIGHEST -> MONITOR`) 与 `Cancellable` 短路机制。
+- **Thread Safety:** 状态变更统一路由至主线程心跳与 `TransactionBuffer`，辅助以 `AgentBridge.executeOnGameThread(...)`。
 - **Diagnostics & Logging:** `DiagnosticsHub` (asynchronous ring buffer, dynamic Log4j 2 / SLF4J binding, ANSI color formatting) and `CrashDumpRecorder` (`dumps/*.dump` automated crash snapshots).
 - **File System Monitoring:** Java NIO `WatchService` monitoring `scripts/` directory for live hot reloading.
 - **Data & Asset Management:** Java NIO Path / UTF-8 File APIs enabling scripts to generate datapacks, virtual models, and configs.
