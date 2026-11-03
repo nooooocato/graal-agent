@@ -37,9 +37,9 @@
     - [x] 重构 `ServerLifecyclePlugin` 与 `ServerTickPlugin`：使用标称类型匹配生命周期与 tick 方法
     - [x] 重构 `CommandsInitPlugin` 与 `PackRepositoryPlugin`：消除构造函数与指令集合原始描述符
     - [x] 统一重构 `MethodVirtualizer` 通用分发桩生成器为纯标称类型 API
-- [ ] Task: 运行全量离线单测与 SMV 实机验证总线 (Refactor Phase)
-    - [ ] 运行 `run-tests.ps1` 确保 63 个单元测试全部通过
-    - [ ] 运行 `verify-smv.ps1` 验证 5 大步实机插件链与字节码校验 100% 通过
+- [x] 0fde588 Task: 运行全量离线单测与 SMV 实机验证总线 (Refactor Phase)
+    - [x] 运行 `run-tests.ps1` 确保 63 个单元测试全部通过
+    - [x] 运行 `verify-smv.ps1` 验证 5 大步实机插件链与字节码校验 100% 通过
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: 知识库文档事实与测试矩阵全量校准 (Documentation & Test Matrix Synchronization)
