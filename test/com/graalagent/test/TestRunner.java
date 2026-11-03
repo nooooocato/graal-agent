@@ -40,6 +40,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.transformer.SMVOrchestratorTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ClientPluginsTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ServerAndSystemPluginsTest");
+            addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.NominalTypingPluginsTest");
         }
 
         int total = 0;
