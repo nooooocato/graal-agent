@@ -17,10 +17,10 @@
 - [x] 13d3466 Task: 编写 AgentBridge 句柄收敛与预热单测 (Red Phase)
     - [x] 编写针对 AgentBridge 通过 MethodHandleCache 调度聊天发送与跨端判断的测试
     - [x] 编写双阶段安全预热机制在实例捕获时的触发测试
-- [ ] Task: 实现 AgentBridge 裸反射收敛与预热逻辑 (Green Phase)
-    - [ ] 将 `AgentBridge.sendChatMessage` 中的裸反射与字段缓存重构为 `MethodHandleCache` 句柄调用
-    - [ ] 将 `AgentBridge.isMultiplayer` 与 `onServerReloadResources` 中的裸反射收敛至句柄池
-    - [ ] 在 `AgentMain` 与 `EnvironmentContext` 中落地双阶段预热调用
+- [x] ab47e04 Task: 实现 AgentBridge 裸反射收敛与预热逻辑 (Green Phase)
+    - [x] 将 `AgentBridge.sendChatMessage` 中的裸反射与字段缓存重构为 `MethodHandleCache` 句柄调用
+    - [x] 将 `AgentBridge.isMultiplayer` 与 `onServerReloadResources` 中的裸反射收敛至句柄池
+    - [x] 在 `AgentMain` 与 `EnvironmentContext` 中落地双阶段预热调用
 - [ ] Task: 清除 AgentBridge 废弃字段与回归验证 (Refactor Phase)
     - [ ] 彻底清理 `AgentBridge` 内部无用的 `literalMethod`、`sendSystemMessageMethod`、`playerField` 等静态变量
     - [ ] 运行 `run-tests.ps1` 验证桥接调用与指令透传测试通过
