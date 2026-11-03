@@ -41,6 +41,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ClientPluginsTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ServerAndSystemPluginsTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.NominalTypingPluginsTest");
+            addTestClassIfExists(testClasses, "com.graalagent.concurrency.ConcurrencyControllerTest");
         }
 
         int total = 0;
