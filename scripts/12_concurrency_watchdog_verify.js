@@ -130,20 +130,27 @@ agent.registerCommand("asyncbench", (args) => {
         let count = 20;
         if (args && args.trim().length > 0) {
             const parsed = parseInt(args.trim());
-            if (!isNaN(parsed) && parsed > 0) count = Math.min(parsed, 100);
+            if (!isNaN(parsed) && parsed > 0) count = Math.min(parsed, 10000);
         }
 
         agent.chat(`§e[AsyncBench] 派发 ${count} 个异步沙箱计算任务至 WorkerPool...`);
         const start = Date.now();
         let completed = 0;
+        let successCount = 0;
+        let timeoutCount = 0;
 
         for (let i = 0; i < count; i++) {
             const expr = `${i} * ${i} + 1`;
             facade.evalSandboxedAsync(expr, null).thenAccept(res => {
                 completed++;
+                if (res.timedOut()) {
+                    timeoutCount++;
+                } else {
+                    successCount++;
+                }
                 if (completed === count) {
                     const elapsed = Date.now() - start;
-                    agent.chat(`§a[AsyncBench 完成] ${count} 个任务全量执行完毕！总耗时: §f${elapsed} ms§a, 游戏主线程 0 卡顿。`);
+                    agent.chat(`§a[AsyncBench 完成] ${count} 个任务全量执行完毕！总耗时: §f${elapsed} ms§a, 成功: §f${successCount}§a, 熔断: §e${timeoutCount}§a, 游戏主线程 0 卡顿。`);
                 }
             });
         }
