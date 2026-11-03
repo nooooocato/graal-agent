@@ -13,7 +13,7 @@
     - [x] 运行 `run-tests.ps1` 验证引导测试通过
 - [x] 5cbf381 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2: 桥接层反射清零与句柄池双阶段预热 (AgentBridge MH Convergence & Dual-Phase Warmup)
+## Phase 2: 桥接层反射清零与句柄池双阶段预热 (AgentBridge MH Convergence & Dual-Phase Warmup) [checkpoint: bb51e19]
 - [x] 13d3466 Task: 编写 AgentBridge 句柄收敛与预热单测 (Red Phase)
     - [x] 编写针对 AgentBridge 通过 MethodHandleCache 调度聊天发送与跨端判断的测试
     - [x] 编写双阶段安全预热机制在实例捕获时的触发测试
@@ -24,7 +24,7 @@
 - [x] ab47e04 Task: 清除 AgentBridge 废弃字段与回归验证 (Refactor Phase)
     - [x] 彻底清理 `AgentBridge` 内部无用的 `literalMethod`、`sendSystemMessageMethod`、`playerField` 等静态变量
     - [x] 运行 `run-tests.ps1` 验证桥接调用与指令透传测试通过
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] bb51e19 Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: 8 大微插件 Class-File API 标称类型符号化重构 (Nominal Typing Class-File API Refactor)
 - [ ] Task: 编写微插件标称类型匹配断言测试 (Red Phase)
