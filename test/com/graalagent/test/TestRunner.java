@@ -46,6 +46,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.concurrency.AsyncWorkerPoolTest");
             addTestClassIfExists(testClasses, "com.graalagent.concurrency.SystemContextConcurrencyTest");
             addTestClassIfExists(testClasses, "com.graalagent.concurrency.TransactionBufferTest");
+            addTestClassIfExists(testClasses, "com.graalagent.concurrency.LockFreeEventBusTest");
         }
 
         int total = 0;
