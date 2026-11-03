@@ -93,6 +93,13 @@ public final class MethodHandleCache {
     }
 
     /**
+     * Prewarm core reflection handles on startup using the system classloader.
+     */
+    public static void warmup() {
+        warmup(null);
+    }
+
+    /**
      * Prewarm core reflection handles on startup to eliminate first-call overhead.
      */
     public static void warmup(ClassLoader cl) {
