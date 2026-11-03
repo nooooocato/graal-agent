@@ -21,45 +21,13 @@ public class AgentMain {
         startAgent("agentmain", agentArgs, inst);
     }
 
-    private static void startAgent(String mode, String agentArgs, Instrumentation inst) {
-        try {
-            // 1. Locate Agent directory
-            File agentJar = getAgentJarFile();
-            File agentDir = (agentJar != null && agentJar.getParentFile() != null)
-                    ? agentJar.getParentFile().getCanonicalFile()
-                    : new File(".").getCanonicalFile();
+    public static com.graalagent.bootstrap.AgentConfig startAgent(String mode, String agentArgs, Instrumentation inst) {
+        // Red phase stub
+        return null;
+    }
 
-            // Initialize logger file relative to agent directory
-            Logger.initLogFile(new File(agentDir, "agent.log"));
-
-            Logger.info("==================================================");
-            Logger.info("Minecraft 26.3 JavaScript Agent starting (" + mode + ")");
-            Logger.info("Java Runtime: " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
-            Logger.info("Agent directory: " + agentDir.getAbsolutePath());
-            Logger.info("Working directory: " + new File(".").getAbsolutePath());
-            Logger.info("==================================================");
-
-            // 2. Load dependent JARs (GraalJS, Truffle, ICU4J, etc.) into System ClassLoader
-            loadLibraries(agentDir, agentArgs, inst);
-
-            // 3. Determine Scripts directory
-            File scriptsDir = resolveScriptsDir(agentArgs, agentDir);
-            Logger.info("Scripts directory: " + scriptsDir.getAbsolutePath());
-
-            // 4. Initialize ScriptManager
-            ScriptManager.init(scriptsDir);
-
-            // 5. Register SMV bytecode mesh orchestrator & micro-plugins
-            SMVOrchestrator orchestrator = SMVOrchestrator.createDefault();
-            inst.addTransformer(orchestrator, true);
-            Logger.info("SMVOrchestrator registered with Instrumentation (8 micro-plugins active).");
-
-            Logger.info("==================================================");
-            Logger.info("Graal-JS-Agent initialization complete. Ready for MC!");
-            Logger.info("==================================================");
-        } catch (Throwable t) {
-            Logger.error("Failed to start Graal-JS-Agent", t);
-        }
+    public static void setupUncaughtExceptionHandler(File dumpDir) {
+        // Red phase stub
     }
 
     private static File getAgentJarFile() {

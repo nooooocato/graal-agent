@@ -34,6 +34,7 @@ public class TestRunner {
             addTestClassIfExists(testClasses, "com.graalagent.bridge.MethodHandleCacheTest");
             addTestClassIfExists(testClasses, "com.graalagent.bridge.brigadier.BrigadierAdapterTest");
             addTestClassIfExists(testClasses, "com.graalagent.bootstrap.BootstrapTest");
+            addTestClassIfExists(testClasses, "com.graalagent.bootstrap.AgentMainBootstrapTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.smv.MethodVirtualizerTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.SMVOrchestratorTest");
             addTestClassIfExists(testClasses, "com.graalagent.transformer.plugins.ClientPluginsTest");
