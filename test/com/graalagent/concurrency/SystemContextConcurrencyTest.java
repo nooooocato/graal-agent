@@ -111,4 +111,40 @@ public class SystemContextConcurrencyTest {
             }
         }
     }
+
+    public void testConcurrentTimerCallbackFromBackgroundThread() throws Exception {
+        Path tempDir = Files.createTempDirectory("graalagent-timer-collision-test-");
+        try {
+            ScriptManager sm = new ScriptManager(tempDir.toFile());
+            sm.start();
+
+            sm.evalInline("""
+                globalThis.timerCalls = 0;
+                agent.setInterval(function() {
+                    globalThis.timerCalls++;
+                }, 10);
+            """);
+
+            long start = System.currentTimeMillis();
+            boolean called = false;
+            while (System.currentTimeMillis() - start < 2000) {
+                sm.onTick();
+                Object count = sm.evalInline("globalThis.timerCalls");
+                if (count != null && !"null".equals(String.valueOf(count)) && Integer.parseInt(String.valueOf(count)) >= 2) {
+                    called = true;
+                    break;
+                }
+                Thread.sleep(20);
+            }
+
+            Assert.assertTrue(called, "Background timer callback should execute without MultiThreaded access error");
+            sm.stop();
+        } finally {
+            try (var stream = Files.walk(tempDir)) {
+                stream.sorted(java.util.Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(java.io.File::delete);
+            }
+        }
+    }
 }

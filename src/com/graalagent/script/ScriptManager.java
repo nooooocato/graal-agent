@@ -148,15 +148,20 @@ public class ScriptManager {
     }
 
     public void executeCallback(Value callback, Object... args) {
-        if (callback != null && callback.canExecute() && context != null) {
+        if (callback == null || context == null) {
+            return;
+        }
+        AgentBridge.executeOnGameThread(() -> {
             concurrencyController.executeRead(() -> {
                 try {
-                    callback.execute(args);
+                    if (callback.canExecute()) {
+                        callback.execute(args);
+                    }
                 } catch (Throwable t) {
                     Logger.error("Error executing callback", t);
                 }
             });
-        }
+        });
     }
 
     private void initContext() {
