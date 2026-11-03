@@ -3,9 +3,9 @@
 ## Phase 1: 读写锁与并发骨架 (ReadWriteLock Architecture)
 - [x] Task: 编写读写锁竞争与非阻塞 Tick 单元测试 (Red Phase) fb970cd
     - [x] 模拟重载期间主线程尝试 tick，验证 tryLock 成功避免挂起
-- [ ] Task: 重构 ScriptEngineFacade 并发锁策略 (Green Phase)
-    - [ ] 引入 `ReentrantReadWriteLock` 替代原先粗粒度 `synchronized`
-    - [ ] 实现非阻塞的 `onTick()` 与安全的独占式 `reload()`
+- [x] Task: 重构 ScriptEngineFacade 并发锁策略 (Green Phase) 0f8d225
+    - [x] 引入 `ReentrantReadWriteLock` 替代原先粗粒度 `synchronized`
+    - [x] 实现非阻塞的 `onTick()` 与安全的独占式 `reload()`
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: 异步 Worker 线程池与看门狗 (AsyncWorker & Watchdog)
