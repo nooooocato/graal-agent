@@ -2,9 +2,6 @@
 
 ---
 
-- [x] **Track: 第三阶段：核心并发、看门狗防卡死与事务缓冲 (Concurrency, Watchdog & Transaction Buffer)**
-  *Link: [./tracks/phase3_concurrency_watchdog_20261103/index.md](./tracks/phase3_concurrency_watchdog_20261103/index.md)*
-
 - [ ] **Track: 第四阶段：双容器零信任物理隔离与闭包令牌 (Dual-Context Zero-Trust & Closure Tokens)**
   *Link: [./tracks/phase4_dual_context_security_20261103/index.md](./tracks/phase4_dual_context_security_20261103/index.md)*
 
